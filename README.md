@@ -1,4 +1,4 @@
-# 🔄 Daily Task Auto Generator - User Guide
+# 🔄 Daily Task Auto Generator
 
 ## 📖 Introduction
 
