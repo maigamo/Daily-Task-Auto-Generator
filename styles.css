@@ -1,0 +1,413 @@
+/* 基础样式 */
+.daily-task-setting-tab {
+    padding: 10px 30px;
+    transition: all 0.3s ease;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 设置页面标题 */
+.daily-task-setting-tab h2 {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.daily-task-setting-tab h3 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* 三选滑块 */
+.mode-toggle-container {
+    display: flex;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+    position: relative;
+    min-width: 450px; /* 增加最小宽度以确保中文显示完整 */
+    width: 100%;
+    max-width: 100%;
+}
+
+.mode-toggle-option {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 1;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 130px; /* 增加最小宽度以确保中文显示完整 */
+    font-size: 0.9em;
+}
+
+.mode-toggle-option:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.mode-toggle-option.active {
+    color: var(--text-on-accent);
+    font-weight: bold;
+}
+
+.mode-toggle-slider {
+    position: absolute;
+    height: 100%;
+    width: 33.33%;
+    background-color: var(--interactive-accent);
+    border-radius: 5px;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 设置项动画 */
+.setting-item {
+    padding: 16px 0; /* 增加垂直间距 */
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--background-modifier-border-subtle);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+/* 设置项标题和描述间距 */
+.setting-item-info {
+    padding-right: 20px; /* 增加右侧空间 */
+}
+
+.setting-item-description {
+    margin-top: 6px;
+}
+
+/* 设置控件布局 */
+.setting-item-control {
+    margin-top: 10px; /* 增加控件与描述间距 */
+}
+
+/* 输入框样式优化 */
+.setting-item-control input[type="text"] {
+    min-width: 300px; 
+    width: 100%;
+    max-width: 100%;
+    padding: 8px 10px;
+    border-radius: 4px;
+}
+
+/* 按钮基本样式 */
+button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* 保存按钮 - Obsidian紫色 */
+.save-button {
+    background-color: var(--interactive-accent) !important;
+    color: var(--text-on-accent) !important;
+    font-weight: 500;
+}
+
+/* 危险操作按钮 - 红色 */
+.danger-button {
+    background-color: #e53935 !important;
+    color: white !important;
+    font-weight: 500;
+}
+
+/* 添加任务按钮 */
+.add-task-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-on-accent);
+    background-color: var(--interactive-accent);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    margin-top: 20px; /* 增加顶部间距 */
+    text-align: center;
+}
+
+.add-task-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-task-button:active {
+    transform: scale(0.95);
+}
+
+.add-task-button.loading {
+    position: relative;
+    padding-left: 35px;
+}
+
+.add-task-button.loading:before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    margin-top: -8px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.add-task-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 通知动画 */
+.notice {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUpNotice 0.3s forwards;
+}
+
+@keyframes fadeInUpNotice {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 不同类型的通知样式 */
+.daily-task-success-notice {
+    background-color: rgba(46, 160, 67, 0.9) !important;
+    color: white !important;
+    border-left: 4px solid #2ea043 !important;
+    display: flex !important;
+    align-items: center !important;
+    padding-left: 12px !important;
+}
+
+.daily-task-success-notice::before {
+    content: '✓';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    margin-right: 8px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.daily-task-warning-notice {
+    background-color: rgba(209, 154, 10, 0.9) !important;
+    color: white !important;
+    border-left: 4px solid #d19a0a !important;
+    display: flex !important;
+    align-items: center !important;
+    padding-left: 12px !important;
+}
+
+.daily-task-warning-notice::before {
+    content: '⚠';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    margin-right: 8px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.daily-task-error-notice {
+    background-color: rgba(203, 36, 49, 0.9) !important;
+    color: white !important;
+    border-left: 4px solid #cb2431 !important;
+    display: flex !important;
+    align-items: center !important;
+    padding-left: 12px !important;
+}
+
+.daily-task-error-notice::before {
+    content: '✗';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    margin-right: 8px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+/* 模板预览容器 */
+.template-preview {
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none;
+}
+
+.template-preview.visible {
+    display: block;
+}
+
+/* 模板编辑区域 */
+.template-editor {
+    height: 150px;
+    width: 100%;
+    font-family: var(--font-monospace);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 5px;
+    padding: 10px;
+    transition: border 0.3s ease;
+    resize: vertical;
+    min-height: 100px;
+    max-height: 300px;
+    box-sizing: border-box;
+    margin-bottom: 8px; /* 增加底部间距 */
+}
+
+.template-editor:focus {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* 模板设置容器样式 */
+.template-setting {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 30px; /* 增加模板组之间的间距 */
+}
+
+.template-setting .setting-item-control {
+    width: 100%;
+}
+
+/* 模板容器宽度 */
+.template-setting > div {
+    width: 100%;
+}
+
+/* 元素悬停效果 */
+.clickable-icon, button, .setting-item-control > *:not(.disabled) {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.clickable-icon:hover, button:hover, .setting-item-control > *:not(.disabled):hover {
+    transform: translateY(-2px);
+}
+
+.clickable-icon:active, button:active, .setting-item-control > *:not(.disabled):active {
+    transform: translateY(0);
+}
+
+/* 禁用动画 */
+.daily-task-no-animations * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 模板预览头部样式 */
+.template-preview-header {
+    display: flex;
+    justify-content: center !important;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+.template-preview-header button {
+    font-size: 12px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 100px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.template-preview-header .svg-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* 图标样式 */
+.svg-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    color: currentColor;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .daily-task-setting-tab {
+        padding: 10px 15px;
+    }
+
+    .mode-toggle-container {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .mode-toggle-option {
+        min-width: unset;
+        padding: 8px 4px;
+        font-size: 0.8em;
+    }
+
+    .setting-item {
+        padding: 12px 0;
+    }
+
+    .setting-item-control input[type="text"] {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .setting-item-control {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        margin-top: 8px;
+    }
+    
+    /* 按钮在移动端垂直排列 */
+    .template-preview-header {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    
+    .template-preview-header button {
+        width: 100%;
+    }
+} 
