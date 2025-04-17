@@ -30,7 +30,7 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian4 = require("obsidian");
 
 // src/models/settings.ts
-var DEFAULT_TEMPLATE_ZH = `## {{date}}\uFF08{{weekday}}\uFF09
+var DEFAULT_TEMPLATE_ZH = `## {{dateWithIcon}}\uFF08{{weekday}}\uFF09
 
 ### \u{1F9D8} \u4ECA\u65E5\u8BA1\u5212
 ---
@@ -44,13 +44,8 @@ var DEFAULT_TEMPLATE_ZH = `## {{date}}\uFF08{{weekday}}\uFF09
 
 - [ ] \u6574\u7406\u4ECA\u65E5\u5DE5\u4F5C\u8BA1\u5212
 - [ ] \u5B8C\u6210\u91CD\u8981\u9879\u76EE\u8FDB\u5EA6
-
-### \u{1F319} \u665A\u95F4\u56DE\u987E
----
-
-- \u4ECA\u65E5\u5B8C\u6210\u5EA6: __%
-- \u660E\u65E5\u8BA1\u5212:`;
-var DEFAULT_TEMPLATE_EN = `## {{date}} ({{weekday}})
+`;
+var DEFAULT_TEMPLATE_EN = `## {{dateWithIcon}} ({{weekday}})
 
 ### \u{1F9D8} Today's Plan
 ---
@@ -64,18 +59,19 @@ var DEFAULT_TEMPLATE_EN = `## {{date}} ({{weekday}})
 
 - [ ] Organize today's work schedule
 - [ ] Progress on important projects
-
-### \u{1F319} Evening Review
----
-
-- Today's completion rate: __%
-- Tomorrow's plan:`;
+`;
 var DEFAULT_SETTINGS = {
   rootDir: "DailyTasks",
-  autoGenerateMode: "none" /* NONE */,
+  autoGenerateMode: "workday" /* WORKDAY */,
   language: "auto" /* AUTO */,
   templateZh: DEFAULT_TEMPLATE_ZH,
   templateEn: DEFAULT_TEMPLATE_EN,
+  customTemplate: "",
+  // 默认为空，表示使用语言相关的默认模板
+  hasCustomTemplate: false,
+  // 默认不使用自定义模板
+  taskStatistics: false,
+  // 默认关闭任务统计功能
   successNotificationDuration: 3e3
 };
 
@@ -83,39 +79,43 @@ var DEFAULT_SETTINGS = {
 var import_obsidian3 = require("obsidian");
 
 // src/i18n/i18n.ts
-var zhTranslations = {
+var translationsZH = {
   // 设置页面
-  "settings.title": "\u{1F4C5} \u6BCF\u65E5\u4EFB\u52A1\u81EA\u52A8\u751F\u6210\u5668",
+  "settings.title": "\u6BCF\u65E5\u4EFB\u52A1\u81EA\u52A8\u751F\u6210\u5668\u8BBE\u7F6E",
   "settings.rootDir": "\u{1F4C1} \u4EFB\u52A1\u6587\u4EF6\u5B58\u653E\u76EE\u5F55",
-  "settings.rootDir.desc": "\u751F\u6210\u7684\u4EFB\u52A1\u6587\u4EF6\u5C06\u4FDD\u5B58\u5728\u6B64\u76EE\u5F55\u4E0B",
-  "settings.rootDir.saved": "\u2705 \u8DEF\u5F84\u8BBE\u7F6E\u5DF2\u4FDD\u5B58",
-  "settings.save": "\u4FDD\u5B58",
-  "settings.autoGenerate": "\u2699\uFE0F \u81EA\u52A8\u751F\u6210\u6A21\u5F0F",
-  "settings.autoGenerate.desc": "\u8BBE\u7F6E\u4F55\u65F6\u81EA\u52A8\u751F\u6210\u4EFB\u52A1",
-  "settings.mode.none": "\u5173\u95ED",
-  "settings.mode.daily": "\u6BCF\u65E5\u81EA\u52A8\u751F\u6210",
-  "settings.mode.workday": "\u4EC5\u5DE5\u4F5C\u65E5\u81EA\u52A8\u751F\u6210",
-  "settings.language": "\u{1F310} \u754C\u9762\u8BED\u8A00",
-  "settings.language.desc": "\u8BBE\u7F6E\u63D2\u4EF6\u754C\u9762\u8BED\u8A00\uFF08\u9700\u91CD\u542FObsidian\u751F\u6548\uFF09",
-  "settings.language.auto": "\u81EA\u52A8\u68C0\u6D4B",
-  "settings.language.zh": "\u4E2D\u6587",
-  "settings.language.en": "\u82F1\u6587",
-  "settings.animations": "UI\u52A8\u753B\u6548\u679C",
-  "settings.animations.desc": "\u542F\u7528\u6216\u7981\u7528\u754C\u9762\u52A8\u753B\u6548\u679C",
-  "settings.template": "\u{1F4DD} \u4EFB\u52A1\u6A21\u677F\u8BBE\u7F6E",
-  "settings.template.zh": "\u4E2D\u6587\u6A21\u677F\uFF08\u5F53\u524D\u73AF\u5883\u4E3A\u4E2D\u6587\u65F6\u9ED8\u8BA4\u4F7F\u7528\uFF09",
-  "settings.template.en": "\u82F1\u6587\u6A21\u677F\uFF08\u5F53\u524D\u73AF\u5883\u4E3A\u82F1\u6587\u65F6\u9ED8\u8BA4\u4F7F\u7528\uFF09",
-  "settings.template.preview": "\u67E5\u770B\u9884\u89C8",
-  "settings.template.hide": "\u6536\u8D77\u9884\u89C8",
-  "settings.resetDefault": "\u6062\u590D\u9ED8\u8BA4",
-  "settings.addTaskButton": "\u{1F4CB} \u624B\u52A8\u6DFB\u52A0\u4ECA\u65E5\u4EFB\u52A1",
+  "settings.rootDir.desc": '\u6307\u5B9A\u4FDD\u5B58\u4EFB\u52A1\u6587\u4EF6\u7684\u6839\u76EE\u5F55\uFF0C\u4EFB\u52A1\u5C06\u6309"\u5E74\u4EFD/\u6708\u4EFD.md"\u683C\u5F0F\u5B58\u50A8',
+  "settings.rootDir.saved": "\u2713 \u76EE\u5F55\u5DF2\u4FDD\u5B58",
+  "settings.save": "\u{1F4BE} \u4FDD\u5B58",
+  "settings.autoGenerate": "\u{1F504} \u81EA\u52A8\u751F\u6210\u6A21\u5F0F",
+  "settings.autoGenerate.desc": "\u9009\u62E9\u4F55\u65F6\u81EA\u52A8\u751F\u6210\u6BCF\u65E5\u4EFB\u52A1",
+  "settings.mode.none": "\u274C \u5173\u95ED",
+  "settings.mode.daily": "\u{1F4C6} \u6BCF\u5929",
+  "settings.mode.workday": "\u{1F4BC} \u4EC5\u5DE5\u4F5C\u65E5",
+  "settings.language": "\u{1F524} \u754C\u9762\u8BED\u8A00",
+  "settings.language.desc": "\u9009\u62E9\u63D2\u4EF6\u754C\u9762\u663E\u793A\u7684\u8BED\u8A00",
+  "settings.language.auto": "\u{1F50D} \u81EA\u52A8\u68C0\u6D4B",
+  "settings.language.zh": "\u{1F1E8}\u{1F1F3} \u4E2D\u6587",
+  "settings.language.en": "\u{1F1EC}\u{1F1E7} \u82F1\u6587",
+  "settings.animations": "\u2728 \u52A8\u753B\u6548\u679C",
+  "settings.animations.desc": "\u542F\u7528\u754C\u9762\u52A8\u753B\u6548\u679C",
+  "settings.template": "\u{1F4DD} \u4EFB\u52A1\u6A21\u677F",
+  "settings.template.zh": "\u{1F1E8}\u{1F1F3} \u4E2D\u6587\u6A21\u677F",
+  "settings.template.en": "\u{1F1EC}\u{1F1E7} \u82F1\u6587\u6A21\u677F",
+  "settings.template.preview": "\u{1F441}\uFE0F \u663E\u793A\u9884\u89C8",
+  "settings.template.hide": "\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F \u9690\u85CF\u9884\u89C8",
   "settings.resetToDefault": "\u{1F504} \u6062\u590D\u9ED8\u8BA4\u8BBE\u7F6E",
+  "settings.addTaskButton": "\u2795 \u624B\u52A8\u6DFB\u52A0\u4ECA\u65E5\u4EFB\u52A1",
   "settings.notificationDuration": "\u23F1\uFE0F \u901A\u77E5\u663E\u793A\u65F6\u95F4",
   "settings.notificationDuration.desc": "\u6210\u529F/\u5931\u8D25\u63D0\u793A\u663E\u793A\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09",
+  "settings.preview": "\u9884\u89C8\u6A21\u677F\u6548\u679C",
+  "settings.resetDefault": "\u6062\u590D\u9ED8\u8BA4\u8BBE\u7F6E",
+  "template.dateWithIcon": "\u5E26\u56FE\u6807\u7684\u5F53\u524D\u65E5\u671F",
+  "settings.basicSettings": "\u57FA\u672C\u8BBE\u7F6E",
+  "settings.templateSettings": "\u6A21\u677F\u8BBE\u7F6E",
   // 通知
-  "notification.taskAdded": "\u5DF2\u6210\u529F\u6DFB\u52A0\u4ECA\u65E5\u4EFB\u52A1",
+  "notification.taskAdded": "\u4ECA\u65E5\u4EFB\u52A1\u5DF2\u6DFB\u52A0",
   "notification.taskExists": "\u4ECA\u65E5\u4EFB\u52A1\u5DF2\u5B58\u5728",
-  "notification.error": "\u64CD\u4F5C\u51FA\u9519\uFF1A",
+  "notification.error": "\u9519\u8BEF\uFF1A",
   // 星期
   "weekday.mon": "\u661F\u671F\u4E00",
   "weekday.tue": "\u661F\u671F\u4E8C",
@@ -123,40 +123,63 @@ var zhTranslations = {
   "weekday.thu": "\u661F\u671F\u56DB",
   "weekday.fri": "\u661F\u671F\u4E94",
   "weekday.sat": "\u661F\u671F\u516D",
-  "weekday.sun": "\u661F\u671F\u65E5"
+  "weekday.sun": "\u661F\u671F\u65E5",
+  // 插件名称和描述
+  "plugin.name": "\u6BCF\u65E5\u4EFB\u52A1\u81EA\u52A8\u751F\u6210\u5668",
+  "plugin.description": "\u4E00\u4E2A\u5F3A\u5927\u7684\u4EFB\u52A1\u81EA\u52A8\u751F\u6210\u5668\uFF0C\u5E2E\u52A9\u4F60\u9AD8\u6548\u5730\u7BA1\u7406\u65E5\u5E38\u4EFB\u52A1",
+  // 一般按钮和消息
+  "button.addTask": "\u6DFB\u52A0\u4EFB\u52A1",
+  "button.save": "\u4FDD\u5B58",
+  "button.cancel": "\u53D6\u6D88",
+  "button.done": "\u5B8C\u6210",
+  // 添加任务统计相关翻译
+  "settings.taskStatistics": "\u{1F4CA} \u4EFB\u52A1\u5B8C\u6210\u7EDF\u8BA1",
+  "settings.taskStatistics.desc": "\u5F00\u542F\u540E\uFF0C\u6BCF\u65E5\u751F\u6210\u4EFB\u52A1\u524D\u4F1A\u81EA\u52A8\u7EDF\u8BA1\u524D\u4E00\u5929\u7684\u4EFB\u52A1\u5B8C\u6210\u60C5\u51B5",
+  "statistics.title": "\u{1F4CA} \u6628\u65E5\u4EFB\u52A1\u7EDF\u8BA1",
+  "statistics.totalTasks": "\u4EFB\u52A1\u603B\u6570",
+  "statistics.completedTasks": "\u5DF2\u5B8C\u6210\u4EFB\u52A1",
+  "statistics.completionRate": "\u5B8C\u6210\u7387",
+  "statistics.unfinishedTasks": "\u672A\u5B8C\u6210\u7684\u4EFB\u52A1",
+  "statistics.suggestions": "\u5EFA\u8BAE\u4ECA\u65E5\u8003\u8651\u5B8C\u6210\u4EE5\u4E0B\u4EFB\u52A1",
+  "statistics.moreTasks.singular": "\u8FD8\u67091\u4E2A\u672A\u5B8C\u6210\u4EFB\u52A1",
+  "statistics.moreTasks.plural": "\u8FD8\u6709\u66F4\u591A\u672A\u5B8C\u6210\u4EFB\u52A1"
 };
-var enTranslations = {
+var translationsEN = {
   // 设置页面
-  "settings.title": "\u{1F4C5} Daily Task Auto Generator",
+  "settings.title": "Daily Task Auto Generator Settings",
   "settings.rootDir": "\u{1F4C1} Task Directory",
-  "settings.rootDir.desc": "Generated tasks will be saved in this directory",
-  "settings.rootDir.saved": "\u2705 Path settings saved",
-  "settings.save": "Save",
-  "settings.autoGenerate": "\u2699\uFE0F Auto Generate Mode",
-  "settings.autoGenerate.desc": "Set when to automatically generate tasks",
-  "settings.mode.none": "Off",
-  "settings.mode.daily": "Daily",
-  "settings.mode.workday": "Workdays Only",
-  "settings.language": "\u{1F310} Language",
-  "settings.language.desc": "Set plugin interface language (requires Obsidian restart)",
-  "settings.language.auto": "Auto Detect",
-  "settings.language.zh": "Chinese",
-  "settings.language.en": "English",
-  "settings.animations": "UI Animations",
-  "settings.animations.desc": "Enable or disable interface animations",
-  "settings.template": "\u{1F4DD} Task Template Settings",
-  "settings.template.zh": "Chinese Template (used by default in Chinese environment)",
-  "settings.template.en": "English Template (used by default in English environment)",
-  "settings.template.preview": "Show Preview",
-  "settings.template.hide": "Hide Preview",
-  "settings.resetDefault": "Reset to Default",
-  "settings.addTaskButton": "\u{1F4CB} Add Today's Tasks Manually",
-  "settings.resetToDefault": "\u{1F504} Reset to Default Settings",
+  "settings.rootDir.desc": 'Specify the root directory for storing task files, tasks will be stored in "Year/Month.md" format',
+  "settings.rootDir.saved": "\u2713 Directory saved",
+  "settings.save": "\u{1F4BE} Save",
+  "settings.autoGenerate": "\u{1F504} Auto Generate Mode",
+  "settings.autoGenerate.desc": "Choose when to automatically generate daily tasks",
+  "settings.mode.none": "\u274C Off",
+  "settings.mode.daily": "\u{1F4C6} Daily",
+  "settings.mode.workday": "\u{1F4BC} Workdays Only",
+  "settings.language": "\u{1F524} Interface Language",
+  "settings.language.desc": "Select the language for the plugin interface",
+  "settings.language.auto": "\u{1F50D} Auto Detect",
+  "settings.language.zh": "\u{1F1E8}\u{1F1F3} Chinese",
+  "settings.language.en": "\u{1F1EC}\u{1F1E7} English",
+  "settings.animations": "\u2728 Animation Effects",
+  "settings.animations.desc": "Enable interface animation effects",
+  "settings.template": "\u{1F4DD} Task Template",
+  "settings.template.zh": "\u{1F1E8}\u{1F1F3} Chinese Template",
+  "settings.template.en": "\u{1F1EC}\u{1F1E7} English Template",
+  "settings.template.preview": "\u{1F441}\uFE0F Show Preview",
+  "settings.template.hide": "\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F Hide Preview",
+  "settings.resetToDefault": "\u{1F504} Reset to Default",
+  "settings.addTaskButton": "\u2795 Add Today's Task Manually",
   "settings.notificationDuration": "\u23F1\uFE0F Notification Duration",
   "settings.notificationDuration.desc": "Duration to show success/failure notifications (milliseconds)",
+  "settings.preview": "Preview Template",
+  "settings.resetDefault": "Reset to Default",
+  "template.dateWithIcon": "Current date with icon",
+  "settings.basicSettings": "Basic Settings",
+  "settings.templateSettings": "Template Settings",
   // 通知
-  "notification.taskAdded": "Today's tasks added successfully",
-  "notification.taskExists": "Today's tasks already exist",
+  "notification.taskAdded": "Today's task has been added",
+  "notification.taskExists": "Today's task already exists",
   "notification.error": "Error: ",
   // 星期
   "weekday.mon": "Monday",
@@ -165,11 +188,30 @@ var enTranslations = {
   "weekday.thu": "Thursday",
   "weekday.fri": "Friday",
   "weekday.sat": "Saturday",
-  "weekday.sun": "Sunday"
+  "weekday.sun": "Sunday",
+  // 插件名称和描述
+  "plugin.name": "Daily Task Auto Generator",
+  "plugin.description": "A powerful task auto generator to help you efficiently manage daily tasks",
+  // 一般按钮和消息
+  "button.addTask": "Add Task",
+  "button.save": "Save",
+  "button.cancel": "Cancel",
+  "button.done": "Done",
+  // 添加任务统计相关翻译
+  "settings.taskStatistics": "\u{1F4CA} Task Completion Statistics",
+  "settings.taskStatistics.desc": "When enabled, automatically analyze yesterday's task completion before generating today's tasks",
+  "statistics.title": "\u{1F4CA} Yesterday's Task Summary",
+  "statistics.totalTasks": "Total Tasks",
+  "statistics.completedTasks": "Completed Tasks",
+  "statistics.completionRate": "Completion Rate",
+  "statistics.unfinishedTasks": "Unfinished Tasks",
+  "statistics.suggestions": "Consider completing the following tasks today",
+  "statistics.moreTasks.singular": "more task",
+  "statistics.moreTasks.plural": "more tasks"
 };
 var translations = {
-  "zh": zhTranslations,
-  "en": enTranslations
+  "zh": translationsZH,
+  "en": translationsEN
 };
 var currentLanguage = "en";
 function setCurrentLanguage(language) {
@@ -238,6 +280,74 @@ function getLocalizedMonthName(isEnglish = false) {
   ];
   return isEnglish ? englishMonths[monthIndex] : chineseMonths[monthIndex];
 }
+function getDayIcon() {
+  const day = new Date().getDate();
+  const dayIcons = [
+    "\u{1F311}",
+    // 1日
+    "\u{1F312}",
+    // 2日
+    "\u{1F313}",
+    // 3日
+    "\u{1F314}",
+    // 4日
+    "\u{1F315}",
+    // 5日
+    "\u{1F316}",
+    // 6日
+    "\u{1F317}",
+    // 7日
+    "\u{1F318}",
+    // 8日
+    "\u{1F31F}",
+    // 9日
+    "\u2B50",
+    // 10日
+    "\u{1F308}",
+    // 11日
+    "\u{1F31E}",
+    // 12日
+    "\u{1F324}\uFE0F",
+    // 13日
+    "\u26C5",
+    // 14日
+    "\u{1F326}\uFE0F",
+    // 15日
+    "\u{1F327}\uFE0F",
+    // 16日
+    "\u26C8\uFE0F",
+    // 17日
+    "\u{1F329}\uFE0F",
+    // 18日
+    "\u{1F32A}\uFE0F",
+    // 19日
+    "\u{1F32B}\uFE0F",
+    // 20日
+    "\u{1F32C}\uFE0F",
+    // 21日
+    "\u{1F340}",
+    // 22日
+    "\u{1F331}",
+    // 23日
+    "\u{1F332}",
+    // 24日
+    "\u{1F333}",
+    // 25日
+    "\u{1F334}",
+    // 26日
+    "\u{1F335}",
+    // 27日
+    "\u{1F33A}",
+    // 28日
+    "\u{1F33B}",
+    // 29日
+    "\u{1F33C}",
+    // 30日
+    "\u{1F338}"
+    // 31日
+  ];
+  return dayIcons[day - 1] || "\u{1F4C5}";
+}
 function isEnglishEnvironment() {
   const mondayText = getTranslation("weekday.mon");
   return mondayText === "Monday";
@@ -248,6 +358,10 @@ function getCurrentDay() {
 }
 function getCurrentDate() {
   return `${getCurrentYear()}-${getCurrentMonth()}-${getCurrentDay()}`;
+}
+function getCurrentDateWithIcon() {
+  const icon = getDayIcon();
+  return `${icon} ${getCurrentDate()}`;
 }
 function isWorkday() {
   const day = new Date().getDay();
@@ -275,23 +389,29 @@ function getMonthProgress() {
 }
 
 // src/utils/templateEngine.ts
-function getDefaultTemplateVariables() {
-  return {
-    date: getCurrentDate(),
-    weekday: getCurrentWeekdayName(),
-    yearProgress: getYearProgress(),
-    monthProgress: getMonthProgress(),
-    time: new Date().toLocaleTimeString()
-  };
+function getCurrentTime() {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
 }
-function renderTemplate(template, variables = getDefaultTemplateVariables()) {
-  return template.replace(/\{\{([^}]+)\}\}/g, (match, variableName) => {
-    const trimmedName = variableName.trim();
-    if (trimmedName in variables) {
-      return String(variables[trimmedName]);
-    }
-    return match;
-  });
+function renderTemplate(template) {
+  const variableMap = {
+    "date": getCurrentDate(),
+    "dateWithIcon": getCurrentDateWithIcon(),
+    "weekday": getCurrentWeekdayName(),
+    "yearProgress": getYearProgress(),
+    "monthProgress": getMonthProgress(),
+    "time": getCurrentTime()
+  };
+  let renderedContent = template;
+  for (const [variable, value] of Object.entries(variableMap)) {
+    renderedContent = renderedContent.replace(
+      new RegExp(`{{${variable}}}`, "g"),
+      value.toString()
+    );
+  }
+  return renderedContent;
 }
 
 // src/taskGenerator.ts
@@ -401,25 +521,6 @@ async function appendToFile(vault, path, content) {
     return false;
   }
 }
-async function fileContains(vault, path, content) {
-  try {
-    const file = vault.getAbstractFileByPath(path);
-    if (file && file instanceof import_obsidian.TFile) {
-      try {
-        const currentContent = await vault.read(file);
-        return currentContent.includes(content);
-      } catch (e) {
-        console.error(`\u8BFB\u53D6\u6587\u4EF6\u5185\u5BB9\u65F6\u51FA\u9519: ${e}`);
-        return false;
-      }
-    }
-    console.log(`\u6587\u4EF6\u4E0D\u5B58\u5728\uFF0C\u65E0\u6CD5\u68C0\u67E5\u5185\u5BB9: ${path}`);
-    return false;
-  } catch (error) {
-    console.error(`Error checking file content at ${path}:`, error);
-    return false;
-  }
-}
 function getTaskFilePath(rootDir) {
   const year = getCurrentYear();
   const isEnglish = isEnglishEnvironment();
@@ -431,11 +532,169 @@ async function todayTaskExists(vault, rootDir) {
   const date = getCurrentDate();
   try {
     console.log(`\u68C0\u67E5\u4ECA\u65E5\u4EFB\u52A1\u662F\u5426\u5B58\u5728\u4E8E: ${taskFilePath}`);
-    return await fileContains(vault, taskFilePath, `## ${date}`);
+    const file = vault.getAbstractFileByPath(taskFilePath);
+    if (file && file instanceof import_obsidian.TFile) {
+      const content = await vault.read(file);
+      const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
+      return dateRegex.test(content);
+    }
+    return false;
   } catch (error) {
     console.error(`\u68C0\u67E5\u4ECA\u65E5\u4EFB\u52A1\u65F6\u51FA\u9519:`, error);
     return false;
   }
+}
+function getYesterdayDate() {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const year = yesterday.getFullYear();
+  const month = (yesterday.getMonth() + 1).toString().padStart(2, "0");
+  const day = yesterday.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function getYesterdayTaskFilePath(rootDir) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const year = yesterday.getFullYear().toString();
+  const isEnglish = isEnglishEnvironment();
+  const month = new Date().getMonth();
+  const yesterdayMonth = yesterday.getMonth();
+  const tempDate = new Date();
+  tempDate.setMonth(yesterdayMonth);
+  const monthName = isEnglish ? getMonthNameEN(yesterdayMonth) : getMonthNameZH(yesterdayMonth);
+  return (0, import_obsidian.normalizePath)(`${rootDir}/${year}/${monthName}.md`);
+}
+function getMonthNameZH(monthIndex) {
+  const months = [
+    "1\u6708",
+    "2\u6708",
+    "3\u6708",
+    "4\u6708",
+    "5\u6708",
+    "6\u6708",
+    "7\u6708",
+    "8\u6708",
+    "9\u6708",
+    "10\u6708",
+    "11\u6708",
+    "12\u6708"
+  ];
+  return months[monthIndex];
+}
+function getMonthNameEN(monthIndex) {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  return months[monthIndex];
+}
+async function extractTasksForDate(vault, filePath, date) {
+  try {
+    const file = vault.getAbstractFileByPath(filePath);
+    if (!file || !(file instanceof import_obsidian.TFile)) {
+      console.log(`\u627E\u4E0D\u5230\u6587\u4EF6: ${filePath}`);
+      return null;
+    }
+    const content = await vault.read(file);
+    const dateHeaderRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n(.*?)(?=\\n## |$)`, "s");
+    const match = content.match(dateHeaderRegex);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    console.log(`\u627E\u4E0D\u5230\u65E5\u671F ${date} \u7684\u4EFB\u52A1\u5185\u5BB9`);
+    return null;
+  } catch (error) {
+    console.error(`\u63D0\u53D6\u4EFB\u52A1\u5185\u5BB9\u65F6\u51FA\u9519: ${error}`);
+    return null;
+  }
+}
+function analyzeTaskCompletion(taskContent) {
+  const result = {
+    totalTasks: 0,
+    completedTasks: 0,
+    unfinishedTasksList: []
+  };
+  if (!taskContent) {
+    return result;
+  }
+  const allTasksRegex = /- \[([ x])\] (.+)$/gm;
+  const completedTasksRegex = /- \[x\] (.+)$/gm;
+  const unfinishedTasksRegex = /- \[ \] (.+)$/gm;
+  const allTasksMatches = [...taskContent.matchAll(allTasksRegex)];
+  result.totalTasks = allTasksMatches.length;
+  const completedTasksMatches = [...taskContent.matchAll(completedTasksRegex)];
+  result.completedTasks = completedTasksMatches.length;
+  const unfinishedTasksMatches = [...taskContent.matchAll(unfinishedTasksRegex)];
+  result.unfinishedTasksList = unfinishedTasksMatches.map((match) => match[1].trim());
+  return result;
+}
+async function yesterdayStatisticsExists(vault, filePath, date) {
+  try {
+    const file = vault.getAbstractFileByPath(filePath);
+    if (!file || !(file instanceof import_obsidian.TFile)) {
+      console.log(`\u627E\u4E0D\u5230\u6587\u4EF6: ${filePath}`);
+      return false;
+    }
+    const content = await vault.read(file);
+    const statisticsTitleRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n.*?${getTranslation("statistics.title")}`, "s");
+    return statisticsTitleRegex.test(content);
+  } catch (error) {
+    console.error(`\u68C0\u67E5\u6628\u65E5\u7EDF\u8BA1\u4FE1\u606F\u65F6\u51FA\u9519: ${error}`);
+    return false;
+  }
+}
+function generateStatisticsContent(tasks, t) {
+  let totalTasks;
+  let completedTasks;
+  let unfinishedTasks = [];
+  if (Array.isArray(tasks)) {
+    totalTasks = tasks.length;
+    completedTasks = tasks.filter((task) => task.isCompleted).length;
+    unfinishedTasks = tasks.filter((task) => !task.isCompleted).map((task) => ({ task: task.task }));
+  } else {
+    totalTasks = tasks.totalTasks;
+    completedTasks = tasks.completedTasks;
+    unfinishedTasks = tasks.unfinishedTasksList.map((task) => ({ task }));
+  }
+  const completionRate = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : 0;
+  const displayTasks = unfinishedTasks.slice(0, 5);
+  let content = `## ${t("statistics.title")}
+---
+`;
+  content += `- ${t("statistics.totalTasks")}: ${totalTasks}
+`;
+  content += `- ${t("statistics.completedTasks")}: ${completedTasks}
+`;
+  content += `- ${t("statistics.completionRate")}: ${completionRate}%
+
+`;
+  if (unfinishedTasks.length > 0) {
+    content += `### ${t("statistics.suggestions")}
+---
+`;
+    displayTasks.forEach((item) => {
+      content += `- [ ] ${item.task}
+`;
+    });
+    if (unfinishedTasks.length > 5) {
+      const remaining = unfinishedTasks.length - 5;
+      const moreTasks = remaining === 1 ? t("statistics.moreTasks.singular") : `${remaining} ${t("statistics.moreTasks.plural")}`;
+      content += `- *${moreTasks}*
+`;
+    }
+  }
+  return content;
 }
 
 // src/taskGenerator.ts
@@ -490,7 +749,9 @@ var TaskGenerator = class {
       if (!quietMode)
         console.log(`\u6708\u4EFD\u6587\u4EF6\u786E\u8BA4: ${filePath}`);
       const date = getCurrentDate();
-      const existingTaskCheck = await fileContains(this.vault, filePath, `## ${date}`);
+      const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
+      const fileContent = await this.vault.read(this.vault.getAbstractFileByPath(filePath));
+      const existingTaskCheck = dateRegex.test(fileContent);
       if (existingTaskCheck) {
         console.log(`\u4ECA\u65E5(${date})\u4EFB\u52A1\u5DF2\u5B58\u5728\u4E8E\u6587\u4EF6\u4E2D\uFF0C\u8DF3\u8FC7\u521B\u5EFA`);
         if (openFile) {
@@ -503,11 +764,23 @@ var TaskGenerator = class {
         }
         return true;
       }
-      const template = this.settingsManager.getCurrentTemplate();
+      let statisticsContent = "";
+      if (settings.taskStatistics) {
+        statisticsContent = await this.generateYesterdayStatistics(rootDir, date, quietMode);
+      }
+      let template = "";
+      if (this.settingsManager.hasCustomTemplate()) {
+        template = this.settingsManager.getSettings().customTemplate;
+      } else {
+        template = this.settingsManager.getTemplateByLanguage();
+      }
       const renderedContent = renderTemplate(template);
+      const fullContent = statisticsContent ? `${renderedContent}
+
+${statisticsContent}` : renderedContent;
       if (!quietMode)
         console.log(`\u6B63\u5728\u5411\u6587\u4EF6\u8FFD\u52A0\u5185\u5BB9`);
-      const success = await appendToFile(this.vault, filePath, renderedContent);
+      const success = await appendToFile(this.vault, filePath, fullContent);
       if (success) {
         console.log(`\u2705 \u4EFB\u52A1\u5185\u5BB9\u8FFD\u52A0\u6210\u529F ${date}`);
         if (openFile) {
@@ -536,13 +809,55 @@ var TaskGenerator = class {
     }
   }
   /**
+   * 生成昨日任务统计信息
+   * @param rootDir 根目录
+   * @param todayDate 今日日期（用于检查是否已存在统计）
+   * @param quietMode 静默模式
+   * @returns 统计信息内容或空字符串
+   */
+  async generateYesterdayStatistics(rootDir, todayDate, quietMode = false) {
+    try {
+      const yesterdayDate = getYesterdayDate();
+      const yesterdayFilePath = getYesterdayTaskFilePath(rootDir);
+      if (!quietMode)
+        console.log(`\u6B63\u5728\u83B7\u53D6\u6628\u65E5(${yesterdayDate})\u4EFB\u52A1\u7EDF\u8BA1\uFF0C\u6587\u4EF6\u8DEF\u5F84: ${yesterdayFilePath}`);
+      const todayFilePath = getTaskFilePath(rootDir);
+      const statsExists = await yesterdayStatisticsExists(this.vault, todayFilePath, todayDate);
+      if (statsExists) {
+        if (!quietMode)
+          console.log("\u6628\u65E5\u7EDF\u8BA1\u4FE1\u606F\u5DF2\u5B58\u5728\uFF0C\u8DF3\u8FC7\u751F\u6210");
+        return "";
+      }
+      const yesterdayContent = await extractTasksForDate(this.vault, yesterdayFilePath, yesterdayDate);
+      if (!yesterdayContent) {
+        if (!quietMode)
+          console.log(`\u627E\u4E0D\u5230\u6628\u65E5(${yesterdayDate})\u4EFB\u52A1\u5185\u5BB9\uFF0C\u8DF3\u8FC7\u7EDF\u8BA1`);
+        return "";
+      }
+      const taskStats = analyzeTaskCompletion(yesterdayContent);
+      if (!quietMode) {
+        console.log(`\u6628\u65E5\u4EFB\u52A1\u7EDF\u8BA1: \u603B\u6570=${taskStats.totalTasks}, \u5DF2\u5B8C\u6210=${taskStats.completedTasks}`);
+        console.log(`\u672A\u5B8C\u6210\u4EFB\u52A1: ${taskStats.unfinishedTasksList.length}\u4E2A`);
+      }
+      if (taskStats.totalTasks === 0) {
+        if (!quietMode)
+          console.log("\u6628\u65E5\u6CA1\u6709\u4EFB\u52A1\uFF0C\u8DF3\u8FC7\u7EDF\u8BA1");
+        return "";
+      }
+      return generateStatisticsContent(taskStats, getTranslation);
+    } catch (error) {
+      console.error(`\u751F\u6210\u6628\u65E5\u7EDF\u8BA1\u4FE1\u606F\u65F6\u51FA\u9519:`, error);
+      return "";
+    }
+  }
+  /**
    * 手动添加今日任务
    * @returns 成功或失败
    */
   async addTaskManually() {
     try {
       const settings = this.settingsManager.getSettings();
-      const rootDir = settings.rootDir || "DailyTasks";
+      const rootDir = settings.rootDir.trim() || "DailyTasks";
       const exists = await todayTaskExists(this.vault, rootDir);
       if (exists) {
         this.showWarningNotice(`\u{1F4CC} ${getTranslation("notification.taskExists")}`);
@@ -598,14 +913,12 @@ var TaskGenerator = class {
 };
 
 // src/settings/settings.ts
+var TextCenterCSS = "daily-task-text-center";
 var DailyTaskSettingTab = class extends import_obsidian3.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.previewEl = null;
     this.addTaskButton = null;
-    // 模板预览元素
-    this.zhPreviewEl = null;
-    this.enPreviewEl = null;
     // 目录输入框
     this.rootDirInput = null;
     // 标记设置是否已修改但未保存
@@ -728,132 +1041,189 @@ var DailyTaskSettingTab = class extends import_obsidian3.PluginSettingTab {
       component.inputEl.placeholder = "3000";
       return component;
     });
+    new import_obsidian3.Setting(containerEl).setName(getTranslation("settings.taskStatistics")).setDesc(getTranslation("settings.taskStatistics.desc")).addToggle((toggle) => {
+      const toggleEl = toggle.setValue(settings.taskStatistics).onChange(async (value) => {
+        await this.settingsManager.updateSettings({ taskStatistics: value });
+      });
+      const toggleControl = toggle.toggleEl || toggle.containerEl.querySelector(".checkbox-container");
+      if (toggleControl) {
+        toggleControl.classList.add("task-statistics-toggle");
+        const toggleContainer2 = toggleControl.parentElement;
+        if (toggleContainer2) {
+          const iconEl = createSpan({ cls: "svg-icon lucide-bar-chart-2" });
+          iconEl.style.marginRight = "8px";
+          iconEl.style.color = "var(--text-accent)";
+          toggleContainer2.prepend(iconEl);
+          toggleContainer2.style.transition = "all 0.3s ease";
+          toggleControl.style.transition = "all 0.3s ease";
+        }
+      }
+      return toggleEl;
+    });
     containerEl.createEl("h3", { text: getTranslation("settings.template") });
     const templateDescription = containerEl.createEl("p", {
-      text: this.settingsManager.getCurrentLanguage() === "zh" ? "\u6CE8\u610F\uFF1A\u63D2\u4EF6\u4F1A\u6839\u636E\u5F53\u524D\u8BED\u8A00\u73AF\u5883\u81EA\u52A8\u9009\u62E9\u5BF9\u5E94\u8BED\u8A00\u7684\u4EFB\u52A1\u6A21\u677F\u3002\u5982\u679C\u60A8\u4FEE\u6539\u4E86\u4EFB\u4E00\u6A21\u677F\uFF0C\u5219\u4F1A\u4F7F\u7528\u60A8\u81EA\u5B9A\u4E49\u7684\u6A21\u677F\uFF0C\u4E0D\u518D\u533A\u5206\u8BED\u8A00\u3002" : "Note: The plugin automatically selects the template based on current language environment. If you modify either template, your customized template will be used regardless of language."
+      text: this.settingsManager.getCurrentLanguage() === "zh" ? "\u6CE8\u610F\uFF1A\u9ED8\u8BA4\u6A21\u677F\u4F1A\u6839\u636E\u5F53\u524D\u8BED\u8A00\u73AF\u5883\u81EA\u52A8\u9009\u62E9\u5BF9\u5E94\u8BED\u8A00\u7684\u5185\u5BB9\u3002\u5982\u679C\u60A8\u81EA\u5B9A\u4E49\u6A21\u677F\uFF0C\u5C06\u5728\u6240\u6709\u8BED\u8A00\u73AF\u5883\u4E2D\u4F7F\u7528\u60A8\u7684\u81EA\u5B9A\u4E49\u5185\u5BB9\u3002" : "Note: Default template automatically adapts to your language environment. If you customize the template, your content will be used in all language environments."
     });
     templateDescription.style.fontSize = "0.85em";
     templateDescription.style.opacity = "0.8";
     templateDescription.style.marginBottom = "15px";
-    const zhTemplateSetting = new import_obsidian3.Setting(containerEl).setName(getTranslation("settings.template.zh")).setClass("template-setting");
-    const zhTemplateContainer = document.createElement("div");
-    zhTemplateContainer.style.width = "100%";
-    const zhTextarea = new import_obsidian3.TextAreaComponent(zhTemplateContainer).setValue(settings.templateZh).setPlaceholder("\u5728\u6B64\u5904\u8F93\u5165\u4E2D\u6587\u6A21\u677F...").onChange(async (value) => {
-      await this.settingsManager.updateSettings({ templateZh: value });
-      this.updatePreview(this.zhPreviewEl, value);
+    const templateVariablesEl = containerEl.createEl("p");
+    templateVariablesEl.innerHTML = this.settingsManager.getCurrentLanguage() === "zh" ? "<strong>\u53EF\u7528\u53D8\u91CF\uFF1A</strong> {{date}} - \u65E5\u671F, {{dateWithIcon}} - \u5E26\u56FE\u6807\u7684\u65E5\u671F, {{weekday}} - \u661F\u671F\u51E0, {{yearProgress}} - \u5E74\u8FDB\u5EA6, {{monthProgress}} - \u6708\u8FDB\u5EA6, {{time}} - \u5F53\u524D\u65F6\u95F4" : "<strong>Available variables:</strong> {{date}} - Date, {{dateWithIcon}} - Date with icon, {{weekday}} - Day of week, {{yearProgress}} - Year progress, {{monthProgress}} - Month progress, {{time}} - Current time";
+    templateVariablesEl.style.fontSize = "0.85em";
+    templateVariablesEl.style.marginBottom = "10px";
+    const templateSetting = new import_obsidian3.Setting(containerEl).setName(getTranslation("settings.template")).setClass("template-setting");
+    const templateContainer = document.createElement("div");
+    templateContainer.style.width = "100%";
+    const currentTemplate = this.settingsManager.hasCustomTemplate() ? this.settingsManager.getSettings().customTemplate : this.settingsManager.getTemplateByLanguage();
+    const textarea = new import_obsidian3.TextAreaComponent(templateContainer).setValue(currentTemplate).setPlaceholder(this.settingsManager.getCurrentLanguage() === "zh" ? "\u5728\u6B64\u5904\u8F93\u5165\u4EFB\u52A1\u6A21\u677F..." : "Enter task template here...").onChange(async (value) => {
+      await this.settingsManager.updateSettings({
+        customTemplate: value,
+        hasCustomTemplate: true
+      });
+      this.updatePreview(this.previewEl, value);
     });
-    zhTextarea.inputEl.classList.add("template-editor");
-    const zhPreviewHeader = document.createElement("div");
-    zhPreviewHeader.classList.add("template-preview-header");
-    zhPreviewHeader.style.display = "flex";
-    zhPreviewHeader.style.justifyContent = "center";
-    const zhToggleButton = new import_obsidian3.ButtonComponent(zhPreviewHeader).setButtonText(getTranslation("settings.template.preview"));
+    textarea.inputEl.classList.add("template-editor");
+    textarea.inputEl.style.height = "200px";
+    textarea.inputEl.style.border = "1px solid var(--background-modifier-border-hover)";
+    textarea.inputEl.style.borderRadius = "4px";
+    textarea.inputEl.style.padding = "12px";
+    textarea.inputEl.style.lineHeight = "1.5";
+    textarea.inputEl.style.fontSize = "14px";
+    textarea.inputEl.style.fontFamily = "var(--font-monospace)";
+    textarea.inputEl.style.transition = "all 0.2s ease";
+    textarea.inputEl.style.boxShadow = "inset 0 1px 3px rgba(0, 0, 0, 0.1)";
+    textarea.inputEl.style.backgroundColor = "var(--background-primary)";
+    textarea.inputEl.style.color = "var(--text-normal)";
+    textarea.inputEl.style.resize = "vertical";
+    textarea.inputEl.addEventListener("focus", () => {
+      textarea.inputEl.style.border = "1px solid var(--interactive-accent)";
+      textarea.inputEl.style.boxShadow = "0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1)";
+      textarea.inputEl.style.outline = "none";
+    });
+    textarea.inputEl.addEventListener("blur", () => {
+      textarea.inputEl.style.border = "1px solid var(--background-modifier-border-hover)";
+      textarea.inputEl.style.boxShadow = "inset 0 1px 3px rgba(0, 0, 0, 0.1)";
+    });
+    const previewHeader = document.createElement("div");
+    previewHeader.classList.add("template-preview-header");
+    previewHeader.style.display = "flex";
+    previewHeader.style.justifyContent = "space-between";
+    previewHeader.style.marginTop = "15px";
+    previewHeader.style.marginBottom = "10px";
+    previewHeader.style.width = "100%";
+    const previewBtnContainer = document.createElement("div");
+    previewBtnContainer.style.display = "flex";
+    previewBtnContainer.style.alignItems = "center";
+    const resetBtnContainer = document.createElement("div");
+    resetBtnContainer.style.display = "flex";
+    resetBtnContainer.style.alignItems = "center";
+    const toggleButton = new import_obsidian3.ButtonComponent(previewBtnContainer).setButtonText(getTranslation("settings.template.preview"));
+    toggleButton.buttonEl.addClass(TextCenterCSS);
+    toggleButton.buttonEl.style.textAlign = "center";
+    toggleButton.buttonEl.style.display = "flex";
+    toggleButton.buttonEl.style.alignItems = "center";
+    toggleButton.buttonEl.style.justifyContent = "center";
+    toggleButton.buttonEl.style.width = "130px";
+    toggleButton.buttonEl.style.borderRadius = "4px";
+    toggleButton.buttonEl.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
+    toggleButton.buttonEl.style.transition = "all 0.2s ease";
     const eyeIcon = createSpan({ cls: "svg-icon lucide-eye" });
-    zhToggleButton.buttonEl.prepend(eyeIcon);
-    zhToggleButton.buttonEl.style.display = "flex";
-    zhToggleButton.buttonEl.style.alignItems = "center";
-    zhToggleButton.buttonEl.style.justifyContent = "center";
-    zhToggleButton.buttonEl.style.textAlign = "center";
-    zhToggleButton.buttonEl.style.width = "120px";
-    zhToggleButton.onClick(() => {
-      this.togglePreview(this.zhPreviewEl);
-      if (this.zhPreviewEl && this.zhPreviewEl.classList.contains("visible")) {
+    eyeIcon.style.marginRight = "6px";
+    toggleButton.buttonEl.prepend(eyeIcon);
+    this.previewEl = document.createElement("div");
+    this.previewEl.classList.add("template-preview");
+    this.previewEl.style.marginTop = "15px";
+    this.previewEl.style.padding = "15px";
+    this.previewEl.style.border = "1px dashed var(--background-modifier-border)";
+    this.previewEl.style.borderRadius = "8px";
+    this.previewEl.style.backgroundColor = "var(--background-secondary)";
+    this.previewEl.style.display = "none";
+    this.previewEl.style.maxHeight = "200px";
+    this.previewEl.style.overflow = "auto";
+    this.previewEl.style.boxShadow = "inset 0 0 5px rgba(0,0,0,0.1)";
+    this.updatePreview(this.previewEl, currentTemplate);
+    templateContainer.appendChild(this.previewEl);
+    toggleButton.onClick(() => {
+      this.togglePreview(this.previewEl);
+      if (this.previewEl && this.previewEl.classList.contains("visible")) {
         eyeIcon.className = "svg-icon lucide-eye-off";
-        zhToggleButton.setButtonText(getTranslation("settings.template.hide"));
+        toggleButton.setButtonText(getTranslation("settings.template.hide"));
+        toggleButton.buttonEl.style.backgroundColor = "var(--background-modifier-success)";
       } else {
         eyeIcon.className = "svg-icon lucide-eye";
-        zhToggleButton.setButtonText(getTranslation("settings.template.preview"));
+        toggleButton.setButtonText(getTranslation("settings.template.preview"));
+        toggleButton.buttonEl.style.backgroundColor = "";
       }
     });
-    const zhResetBtn = new import_obsidian3.ButtonComponent(zhPreviewHeader).setButtonText(getTranslation("settings.resetDefault")).onClick(async () => {
-      await this.settingsManager.updateSettings({ templateZh: DEFAULT_TEMPLATE_ZH });
-      zhTextarea.setValue(DEFAULT_TEMPLATE_ZH);
-      this.updatePreview(this.zhPreviewEl, DEFAULT_TEMPLATE_ZH);
+    const resetBtn = new import_obsidian3.ButtonComponent(resetBtnContainer).setButtonText(getTranslation("settings.resetDefault"));
+    resetBtn.buttonEl.addClass(TextCenterCSS);
+    resetBtn.buttonEl.style.textAlign = "center";
+    resetBtn.buttonEl.style.display = "flex";
+    resetBtn.buttonEl.style.alignItems = "center";
+    resetBtn.buttonEl.style.justifyContent = "center";
+    resetBtn.buttonEl.style.width = "150px";
+    resetBtn.buttonEl.style.borderRadius = "4px";
+    resetBtn.buttonEl.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
+    resetBtn.buttonEl.style.transition = "all 0.2s ease";
+    const resetIcon = createSpan({ cls: "svg-icon lucide-refresh-cw" });
+    resetIcon.style.marginRight = "6px";
+    resetBtn.buttonEl.prepend(resetIcon);
+    resetBtn.onClick(async () => {
+      await this.settingsManager.updateSettings({
+        customTemplate: "",
+        hasCustomTemplate: false
+      });
+      const defaultTemplate = this.settingsManager.getTemplateByLanguage();
+      textarea.setValue(defaultTemplate);
+      this.updatePreview(this.previewEl, defaultTemplate);
+      resetBtn.buttonEl.style.backgroundColor = "var(--background-modifier-success)";
+      setTimeout(() => {
+        resetBtn.buttonEl.style.backgroundColor = "";
+      }, 1e3);
     });
-    zhResetBtn.buttonEl.prepend(createSpan({ cls: "svg-icon lucide-refresh-cw" }));
-    zhResetBtn.buttonEl.style.display = "flex";
-    zhResetBtn.buttonEl.style.alignItems = "center";
-    zhResetBtn.buttonEl.style.justifyContent = "center";
-    zhResetBtn.buttonEl.style.textAlign = "center";
-    zhResetBtn.buttonEl.style.width = "120px";
-    zhTemplateContainer.appendChild(zhPreviewHeader);
-    this.zhPreviewEl = document.createElement("div");
-    this.zhPreviewEl.classList.add("template-preview");
-    this.updatePreview(this.zhPreviewEl, settings.templateZh);
-    zhTemplateContainer.appendChild(this.zhPreviewEl);
-    zhTemplateSetting.controlEl.appendChild(zhTemplateContainer);
-    const enTemplateSetting = new import_obsidian3.Setting(containerEl).setName(getTranslation("settings.template.en")).setClass("template-setting");
-    const enTemplateContainer = document.createElement("div");
-    enTemplateContainer.style.width = "100%";
-    const enTextarea = new import_obsidian3.TextAreaComponent(enTemplateContainer).setValue(settings.templateEn).setPlaceholder("Enter English template here...").onChange(async (value) => {
-      await this.settingsManager.updateSettings({ templateEn: value });
-      this.updatePreview(this.enPreviewEl, value);
-    });
-    enTextarea.inputEl.classList.add("template-editor");
-    const enPreviewHeader = document.createElement("div");
-    enPreviewHeader.classList.add("template-preview-header");
-    enPreviewHeader.style.display = "flex";
-    enPreviewHeader.style.justifyContent = "center";
-    const enToggleButton = new import_obsidian3.ButtonComponent(enPreviewHeader).setButtonText(getTranslation("settings.template.preview"));
-    const enEyeIcon = createSpan({ cls: "svg-icon lucide-eye" });
-    enToggleButton.buttonEl.prepend(enEyeIcon);
-    enToggleButton.buttonEl.style.display = "flex";
-    enToggleButton.buttonEl.style.alignItems = "center";
-    enToggleButton.buttonEl.style.justifyContent = "center";
-    enToggleButton.buttonEl.style.textAlign = "center";
-    enToggleButton.buttonEl.style.width = "120px";
-    enToggleButton.onClick(() => {
-      this.togglePreview(this.enPreviewEl);
-      if (this.enPreviewEl && this.enPreviewEl.classList.contains("visible")) {
-        enEyeIcon.className = "svg-icon lucide-eye-off";
-        enToggleButton.setButtonText(getTranslation("settings.template.hide"));
-      } else {
-        enEyeIcon.className = "svg-icon lucide-eye";
-        enToggleButton.setButtonText(getTranslation("settings.template.preview"));
-      }
-    });
-    const enResetBtn = new import_obsidian3.ButtonComponent(enPreviewHeader).setButtonText(getTranslation("settings.resetDefault")).onClick(async () => {
-      await this.settingsManager.updateSettings({ templateEn: DEFAULT_TEMPLATE_EN });
-      enTextarea.setValue(DEFAULT_TEMPLATE_EN);
-      this.updatePreview(this.enPreviewEl, DEFAULT_TEMPLATE_EN);
-    });
-    enResetBtn.buttonEl.prepend(createSpan({ cls: "svg-icon lucide-refresh-cw" }));
-    enResetBtn.buttonEl.style.display = "flex";
-    enResetBtn.buttonEl.style.alignItems = "center";
-    enResetBtn.buttonEl.style.justifyContent = "center";
-    enResetBtn.buttonEl.style.textAlign = "center";
-    enResetBtn.buttonEl.style.width = "120px";
-    enTemplateContainer.appendChild(enPreviewHeader);
-    this.enPreviewEl = document.createElement("div");
-    this.enPreviewEl.classList.add("template-preview");
-    this.updatePreview(this.enPreviewEl, settings.templateEn);
-    enTemplateContainer.appendChild(this.enPreviewEl);
-    enTemplateSetting.controlEl.appendChild(enTemplateContainer);
+    previewHeader.appendChild(previewBtnContainer);
+    previewHeader.appendChild(resetBtnContainer);
+    templateContainer.appendChild(previewHeader);
+    templateSetting.controlEl.appendChild(templateContainer);
     const resetContainer = document.createElement("div");
     resetContainer.style.display = "flex";
     resetContainer.style.justifyContent = "flex-end";
     resetContainer.style.marginTop = "20px";
     resetContainer.style.marginBottom = "10px";
     containerEl.appendChild(resetContainer);
-    const resetDefaultBtn = new import_obsidian3.ButtonComponent(resetContainer).setButtonText(getTranslation("settings.resetToDefault")).onClick(async () => {
-      await this.settingsManager.resetToDefaults();
-      this.display();
-    });
+    const resetDefaultBtn = new import_obsidian3.ButtonComponent(resetContainer).setButtonText(getTranslation("settings.resetToDefault"));
+    resetDefaultBtn.buttonEl.addClass(TextCenterCSS);
     resetDefaultBtn.buttonEl.addClass("danger-button");
-    resetDefaultBtn.buttonEl.prepend(createSpan({ cls: "svg-icon lucide-refresh-cw" }));
+    resetDefaultBtn.buttonEl.style.textAlign = "center";
     resetDefaultBtn.buttonEl.style.display = "flex";
     resetDefaultBtn.buttonEl.style.alignItems = "center";
     resetDefaultBtn.buttonEl.style.justifyContent = "center";
+    resetDefaultBtn.buttonEl.style.width = "150px";
+    resetDefaultBtn.buttonEl.prepend(createSpan({ cls: "svg-icon lucide-refresh-cw" }));
+    resetDefaultBtn.onClick(async () => {
+      await this.settingsManager.resetToDefaults();
+      this.display();
+    });
     const addTaskContainer = document.createElement("div");
     addTaskContainer.style.display = "flex";
     addTaskContainer.style.justifyContent = "flex-end";
     addTaskContainer.style.marginTop = "20px";
     containerEl.appendChild(addTaskContainer);
-    this.addTaskButton = new import_obsidian3.ButtonComponent(addTaskContainer).setButtonText(getTranslation("settings.addTaskButton")).setCta().onClick(async () => {
-      var _a, _b;
+    this.addTaskButton = new import_obsidian3.ButtonComponent(addTaskContainer).setButtonText(getTranslation("settings.addTaskButton")).setCta();
+    if (this.addTaskButton && this.addTaskButton.buttonEl) {
+      this.addTaskButton.buttonEl.addClass(TextCenterCSS);
+      this.addTaskButton.buttonEl.style.textAlign = "center";
+      this.addTaskButton.buttonEl.style.display = "flex";
+      this.addTaskButton.buttonEl.style.alignItems = "center";
+      this.addTaskButton.buttonEl.style.justifyContent = "center";
+    }
+    this.addTaskButton.onClick(async () => {
+      var _a;
       const rootDir = this.settingsManager.getSettings().rootDir;
-      (_a = this.addTaskButton) == null ? void 0 : _a.buttonEl.classList.add("loading");
-      (_b = this.addTaskButton) == null ? void 0 : _b.setDisabled(true);
+      if (this.addTaskButton && this.addTaskButton.buttonEl) {
+        this.addTaskButton.buttonEl.classList.add("loading");
+      }
+      (_a = this.addTaskButton) == null ? void 0 : _a.setDisabled(true);
       try {
         await this.taskGenerator.addTaskManually();
       } catch (e) {
@@ -861,17 +1231,15 @@ var DailyTaskSettingTab = class extends import_obsidian3.PluginSettingTab {
         new import_obsidian3.Notice(`\u6DFB\u52A0\u4EFB\u52A1\u5931\u8D25: ${e.message || e}`);
       } finally {
         setTimeout(() => {
-          var _a2, _b2;
-          (_a2 = this.addTaskButton) == null ? void 0 : _a2.buttonEl.classList.remove("loading");
-          (_b2 = this.addTaskButton) == null ? void 0 : _b2.setDisabled(false);
+          var _a2;
+          if (this.addTaskButton && this.addTaskButton.buttonEl) {
+            this.addTaskButton.buttonEl.classList.remove("loading");
+          }
+          (_a2 = this.addTaskButton) == null ? void 0 : _a2.setDisabled(false);
         }, 500);
       }
     });
     this.addTaskButton.buttonEl.prepend(createSpan({ cls: "svg-icon lucide-calendar-plus" }));
-    this.addTaskButton.buttonEl.classList.add("add-task-button");
-    this.addTaskButton.buttonEl.style.display = "flex";
-    this.addTaskButton.buttonEl.style.alignItems = "center";
-    this.addTaskButton.buttonEl.style.justifyContent = "center";
   }
   /**
    * 更新模板预览
@@ -888,7 +1256,13 @@ var DailyTaskSettingTab = class extends import_obsidian3.PluginSettingTab {
   togglePreview(previewEl) {
     if (!previewEl)
       return;
-    previewEl.classList.toggle("visible");
+    if (previewEl.style.display === "none") {
+      previewEl.style.display = "block";
+      previewEl.classList.add("visible");
+    } else {
+      previewEl.style.display = "none";
+      previewEl.classList.remove("visible");
+    }
   }
 };
 var SettingsManager = class {
@@ -998,6 +1372,35 @@ var SettingsManager = class {
   updateCurrentLanguage() {
     const language = this.getCurrentLanguage();
     setCurrentLanguage(language);
+  }
+  /**
+   * 获取当前语言的模板
+   */
+  getTemplateByLanguage() {
+    const language = this.getCurrentLanguage();
+    if (language === "zh") {
+      if (this.settings.templateZh !== DEFAULT_TEMPLATE_ZH) {
+        return this.settings.templateZh;
+      }
+      if (this.settings.templateEn !== DEFAULT_TEMPLATE_EN) {
+        return this.settings.templateEn;
+      }
+      return this.settings.templateZh;
+    } else {
+      if (this.settings.templateEn !== DEFAULT_TEMPLATE_EN) {
+        return this.settings.templateEn;
+      }
+      if (this.settings.templateZh !== DEFAULT_TEMPLATE_ZH) {
+        return this.settings.templateZh;
+      }
+      return this.settings.templateEn;
+    }
+  }
+  /**
+   * 检查是否存在自定义模板
+   */
+  hasCustomTemplate() {
+    return !!this.settings.customTemplate;
   }
 };
 
