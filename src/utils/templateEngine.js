@@ -1,0 +1,51 @@
+import { getCurrentDate, getCurrentWeekdayName, getYearProgress, getMonthProgress, getCurrentDateWithIcon } from "./dateUtils";
+/**
+ * 模板变量渲染引擎
+ */
+/**
+ * 获取当前时间
+ * @returns 当前时间，如10:30
+ */
+function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+/**
+ * 渲染模板内容，替换其中的变量
+ * @param template 模板内容
+ * @returns 渲染后的内容
+ */
+export function renderTemplate(template) {
+    // 定义变量映射
+    const variableMap = {
+        'date': getCurrentDate(),
+        'dateWithIcon': getCurrentDateWithIcon(),
+        'weekday': getCurrentWeekdayName(),
+        'yearProgress': getYearProgress(),
+        'monthProgress': getMonthProgress(),
+        'time': getCurrentTime()
+    };
+    // 替换模板中的变量
+    let renderedContent = template;
+    for (const [variable, value] of Object.entries(variableMap)) {
+        renderedContent = renderedContent.replace(new RegExp(`{{${variable}}}`, 'g'), value.toString());
+    }
+    return renderedContent;
+}
+/**
+ * 获取变量说明
+ * @returns 变量说明，包括中英文
+ */
+export function getTemplateVariables() {
+    return {
+        'date': '当前日期 / Current date (YYYY-MM-DD)',
+        'dateWithIcon': '带图标的当前日期 / Current date with daily icon',
+        'weekday': '当前星期 / Current weekday',
+        'yearProgress': '年度进度百分比 / Year progress percentage',
+        'monthProgress': '月度进度百分比 / Month progress percentage',
+        'time': '当前时间 / Current time (HH:MM)'
+    };
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidGVtcGxhdGVFbmdpbmUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJ0ZW1wbGF0ZUVuZ2luZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLEVBQ0gsY0FBYyxFQUNkLHFCQUFxQixFQUNyQixlQUFlLEVBQ2YsZ0JBQWdCLEVBQ2hCLHNCQUFzQixFQUN6QixNQUFNLGFBQWEsQ0FBQztBQUVyQjs7R0FFRztBQUVIOzs7R0FHRztBQUNILFNBQVMsY0FBYztJQUNuQixNQUFNLEdBQUcsR0FBRyxJQUFJLElBQUksRUFBRSxDQUFDO0lBQ3ZCLE1BQU0sS0FBSyxHQUFHLEdBQUcsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLEdBQUcsQ0FBQyxDQUFDO0lBQ3pELE1BQU0sT0FBTyxHQUFHLEdBQUcsQ0FBQyxVQUFVLEVBQUUsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLEdBQUcsQ0FBQyxDQUFDO0lBQzdELE9BQU8sR0FBRyxLQUFLLElBQUksT0FBTyxFQUFFLENBQUM7QUFDakMsQ0FBQztBQUVEOzs7O0dBSUc7QUFDSCxNQUFNLFVBQVUsY0FBYyxDQUFDLFFBQWdCO0lBQzNDLFNBQVM7SUFDVCxNQUFNLFdBQVcsR0FBb0M7UUFDakQsTUFBTSxFQUFFLGNBQWMsRUFBRTtRQUN4QixjQUFjLEVBQUUsc0JBQXNCLEVBQUU7UUFDeEMsU0FBUyxFQUFFLHFCQUFxQixFQUFFO1FBQ2xDLGNBQWMsRUFBRSxlQUFlLEVBQUU7UUFDakMsZUFBZSxFQUFFLGdCQUFnQixFQUFFO1FBQ25DLE1BQU0sRUFBRSxjQUFjLEVBQUU7S0FDM0IsQ0FBQztJQUVGLFdBQVc7SUFDWCxJQUFJLGVBQWUsR0FBRyxRQUFRLENBQUM7SUFDL0IsS0FBSyxNQUFNLENBQUMsUUFBUSxFQUFFLEtBQUssQ0FBQyxJQUFJLE1BQU0sQ0FBQyxPQUFPLENBQUMsV0FBVyxDQUFDLEVBQUU7UUFDekQsZUFBZSxHQUFHLGVBQWUsQ0FBQyxPQUFPLENBQ3JDLElBQUksTUFBTSxDQUFDLEtBQUssUUFBUSxJQUFJLEVBQUUsR0FBRyxDQUFDLEVBQ2xDLEtBQUssQ0FBQyxRQUFRLEVBQUUsQ0FDbkIsQ0FBQztLQUNMO0lBRUQsT0FBTyxlQUFlLENBQUM7QUFDM0IsQ0FBQztBQUVEOzs7R0FHRztBQUNILE1BQU0sVUFBVSxvQkFBb0I7SUFDaEMsT0FBTztRQUNILE1BQU0sRUFBRSxrQ0FBa0M7UUFDMUMsY0FBYyxFQUFFLHlDQUF5QztRQUN6RCxTQUFTLEVBQUUsd0JBQXdCO1FBQ25DLGNBQWMsRUFBRSxvQ0FBb0M7UUFDcEQsZUFBZSxFQUFFLHFDQUFxQztRQUN0RCxNQUFNLEVBQUUsNkJBQTZCO0tBQ3hDLENBQUM7QUFDTixDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgXHJcbiAgICBnZXRDdXJyZW50RGF0ZSwgXHJcbiAgICBnZXRDdXJyZW50V2Vla2RheU5hbWUsIFxyXG4gICAgZ2V0WWVhclByb2dyZXNzLCBcclxuICAgIGdldE1vbnRoUHJvZ3Jlc3MsIFxyXG4gICAgZ2V0Q3VycmVudERhdGVXaXRoSWNvbiBcclxufSBmcm9tIFwiLi9kYXRlVXRpbHNcIjtcclxuXHJcbi8qKlxyXG4gKiDmqKHmnb/lj5jph4/muLLmn5PlvJXmk45cclxuICovXHJcblxyXG4vKipcclxuICog6I635Y+W5b2T5YmN5pe26Ze0XHJcbiAqIEByZXR1cm5zIOW9k+WJjeaXtumXtO+8jOWmgjEwOjMwXHJcbiAqL1xyXG5mdW5jdGlvbiBnZXRDdXJyZW50VGltZSgpOiBzdHJpbmcge1xyXG4gICAgY29uc3Qgbm93ID0gbmV3IERhdGUoKTtcclxuICAgIGNvbnN0IGhvdXJzID0gbm93LmdldEhvdXJzKCkudG9TdHJpbmcoKS5wYWRTdGFydCgyLCAnMCcpO1xyXG4gICAgY29uc3QgbWludXRlcyA9IG5vdy5nZXRNaW51dGVzKCkudG9TdHJpbmcoKS5wYWRTdGFydCgyLCAnMCcpO1xyXG4gICAgcmV0dXJuIGAke2hvdXJzfToke21pbnV0ZXN9YDtcclxufVxyXG5cclxuLyoqXHJcbiAqIOa4suafk+aooeadv+WGheWuue+8jOabv+aNouWFtuS4reeahOWPmOmHj1xyXG4gKiBAcGFyYW0gdGVtcGxhdGUg5qih5p2/5YaF5a65XHJcbiAqIEByZXR1cm5zIOa4suafk+WQjueahOWGheWuuVxyXG4gKi9cclxuZXhwb3J0IGZ1bmN0aW9uIHJlbmRlclRlbXBsYXRlKHRlbXBsYXRlOiBzdHJpbmcpOiBzdHJpbmcge1xyXG4gICAgLy8g5a6a5LmJ5Y+Y6YeP5pig5bCEXHJcbiAgICBjb25zdCB2YXJpYWJsZU1hcDogUmVjb3JkPHN0cmluZywgc3RyaW5nIHwgbnVtYmVyPiA9IHtcclxuICAgICAgICAnZGF0ZSc6IGdldEN1cnJlbnREYXRlKCksXHJcbiAgICAgICAgJ2RhdGVXaXRoSWNvbic6IGdldEN1cnJlbnREYXRlV2l0aEljb24oKSxcclxuICAgICAgICAnd2Vla2RheSc6IGdldEN1cnJlbnRXZWVrZGF5TmFtZSgpLFxyXG4gICAgICAgICd5ZWFyUHJvZ3Jlc3MnOiBnZXRZZWFyUHJvZ3Jlc3MoKSxcclxuICAgICAgICAnbW9udGhQcm9ncmVzcyc6IGdldE1vbnRoUHJvZ3Jlc3MoKSxcclxuICAgICAgICAndGltZSc6IGdldEN1cnJlbnRUaW1lKClcclxuICAgIH07XHJcbiAgICBcclxuICAgIC8vIOabv+aNouaooeadv+S4reeahOWPmOmHj1xyXG4gICAgbGV0IHJlbmRlcmVkQ29udGVudCA9IHRlbXBsYXRlO1xyXG4gICAgZm9yIChjb25zdCBbdmFyaWFibGUsIHZhbHVlXSBvZiBPYmplY3QuZW50cmllcyh2YXJpYWJsZU1hcCkpIHtcclxuICAgICAgICByZW5kZXJlZENvbnRlbnQgPSByZW5kZXJlZENvbnRlbnQucmVwbGFjZShcclxuICAgICAgICAgICAgbmV3IFJlZ0V4cChge3ske3ZhcmlhYmxlfX19YCwgJ2cnKSwgXHJcbiAgICAgICAgICAgIHZhbHVlLnRvU3RyaW5nKClcclxuICAgICAgICApO1xyXG4gICAgfVxyXG4gICAgXHJcbiAgICByZXR1cm4gcmVuZGVyZWRDb250ZW50O1xyXG59XHJcblxyXG4vKipcclxuICog6I635Y+W5Y+Y6YeP6K+05piOXHJcbiAqIEByZXR1cm5zIOWPmOmHj+ivtOaYju+8jOWMheaLrOS4reiLseaWh1xyXG4gKi9cclxuZXhwb3J0IGZ1bmN0aW9uIGdldFRlbXBsYXRlVmFyaWFibGVzKCk6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4ge1xyXG4gICAgcmV0dXJuIHtcclxuICAgICAgICAnZGF0ZSc6ICflvZPliY3ml6XmnJ8gLyBDdXJyZW50IGRhdGUgKFlZWVktTU0tREQpJyxcclxuICAgICAgICAnZGF0ZVdpdGhJY29uJzogJ+W4puWbvuagh+eahOW9k+WJjeaXpeacnyAvIEN1cnJlbnQgZGF0ZSB3aXRoIGRhaWx5IGljb24nLFxyXG4gICAgICAgICd3ZWVrZGF5JzogJ+W9k+WJjeaYn+acnyAvIEN1cnJlbnQgd2Vla2RheScsXHJcbiAgICAgICAgJ3llYXJQcm9ncmVzcyc6ICflubTluqbov5vluqbnmb7liIbmr5QgLyBZZWFyIHByb2dyZXNzIHBlcmNlbnRhZ2UnLFxyXG4gICAgICAgICdtb250aFByb2dyZXNzJzogJ+aciOW6pui/m+W6pueZvuWIhuavlCAvIE1vbnRoIHByb2dyZXNzIHBlcmNlbnRhZ2UnLFxyXG4gICAgICAgICd0aW1lJzogJ+W9k+WJjeaXtumXtCAvIEN1cnJlbnQgdGltZSAoSEg6TU0pJ1xyXG4gICAgfTtcclxufSAiXX0=

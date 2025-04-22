@@ -1,0 +1,91 @@
+/* 任务统计样式 */
+.daily-task-statistics {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: rgba(var(--interactive-accent-rgb), 0.1);
+    border-left: 4px solid var(--interactive-accent);
+}
+
+.daily-task-statistics h3 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    color: var(--text-accent);
+}
+
+.daily-task-statistics h4 {
+    margin-top: 12px;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    color: var(--text-accent);
+}
+
+/* 提示建议样式 */
+.daily-task-suggestions {
+    padding: 10px 15px;
+    border-radius: 6px;
+    background-color: rgba(var(--background-modifier-success-rgb), 0.1);
+    margin-top: 10px;
+}
+
+/* 任务统计开关样式 */
+.task-statistics-toggle {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.task-statistics-toggle:hover {
+    transform: scale(1.05);
+}
+
+.task-statistics-toggle.is-enabled {
+    background-color: var(--interactive-accent) !important;
+}
+
+/* 自定义滚动条样式 */
+.daily-task-setting-tab ::-webkit-scrollbar {
+    width: 8px; /* 设置滚动条宽度 */
+}
+
+.daily-task-setting-tab ::-webkit-scrollbar-track {
+    background: var(--background-secondary); /* 设置轨道背景 */
+    border-radius: 4px;
+}
+
+.daily-task-setting-tab ::-webkit-scrollbar-thumb {
+    background: var(--interactive-accent); /* 设置滑块颜色 */
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: background 0.2s ease;
+}
+
+.daily-task-setting-tab ::-webkit-scrollbar-thumb:hover {
+    background: var(--interactive-accent-hover); /* 滑块悬停颜色 */
+    opacity: 1;
+}
+
+/* 应用滚动条样式到所有可滚动元素 */
+.daily-task-slim-scrollbar {
+    scrollbar-width: thin;
+}
+
+.daily-task-slim-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.daily-task-slim-scrollbar::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.daily-task-slim-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--interactive-accent);
+    border-radius: 4px;
+}
+
+.daily-task-slim-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--interactive-accent-hover);
+} 

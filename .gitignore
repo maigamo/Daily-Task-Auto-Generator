@@ -1,0 +1,15 @@
+# node modules
+node_modules/
+
+# build artifacts
+main.js
+main.js.map
+data.json
+
+# editor settings
+.vscode/
+.idea/
+
+# operating system files
+.DS_Store
+Thumbs.db 
