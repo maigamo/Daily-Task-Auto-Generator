@@ -40,6 +40,7 @@ export type TranslationKey =
     | 'notification.taskAdded'
     | 'notification.taskExists'
     | 'notification.error'
+    | 'notification.generating'
     
     // 星期
     | 'weekday.mon'
@@ -167,6 +168,7 @@ const translationsZH: Record<TranslationKey, string> = {
     'notification.taskAdded': '今日任务已添加',
     'notification.taskExists': '今日任务已存在',
     'notification.error': '错误：',
+    'notification.generating': '正在生成今日任务...',
     
     // 星期
     'weekday.mon': '星期一',
@@ -239,6 +241,7 @@ const translationsEN: Record<TranslationKey, string> = {
     'notification.taskAdded': 'Today\'s task has been added',
     'notification.taskExists': 'Today\'s task already exists',
     'notification.error': 'Error: ',
+    'notification.generating': 'Generating today\'s tasks...',
     
     // 星期
     'weekday.mon': 'Monday',

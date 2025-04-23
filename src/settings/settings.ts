@@ -11,7 +11,7 @@ declare class DailyTaskPlugin {
     app: App;
 }
 
-// CSS 相关代码
+// CSS 相关常量（class名称）
 const SettingsSectionCSS = "daily-task-settings-section";
 const ButtonCSS = "daily-task-button";
 const PreviewButtonCSS = "daily-task-preview-button";
@@ -21,71 +21,19 @@ const VerticalStackCSS = "daily-task-vertical-stack";
 const TextRightCSS = "daily-task-text-right";
 const TextCenterCSS = "daily-task-text-center";
 const ScrollbarSlimCSS = "daily-task-slim-scrollbar";
+const SaveIndicatorCSS = "daily-task-save-indicator";
+const SuccessIconCSS = "daily-task-success-icon";
+const SettingTopSpaceCSS = "daily-task-setting-top-space";
+const InputContainerCSS = "daily-task-input-container";
+const InputCSS = "daily-task-input";
 
 /**
  * 添加插件自定义样式
+ * 注意：样式内容现在已移至外部CSS文件
  */
 function addCustomStyles() {
-    const cssText = `
-        .${SettingsSectionCSS} {
-            margin-top: 24px;
-            margin-bottom: 24px;
-            padding: 12px 0;
-            border-top: 1px solid var(--background-modifier-border);
-        }
-        
-        .${ButtonCSS} {
-            margin-top: 6px;
-            margin-bottom: 6px;
-        }
-        
-        .${PreviewButtonCSS}, .${ResetButtonCSS} {
-            display: inline-block;
-            text-align: center !important;
-            width: 100%;
-        }
-        
-        .${EditorCSS} {
-            height: 200px;
-            margin-top: 12px;
-            margin-bottom: 12px;
-        }
-        
-        .${VerticalStackCSS} {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .${TextRightCSS} {
-            text-align: right;
-        }
-        
-        .${TextCenterCSS} {
-            text-align: center !important;
-        }
-        
-        .${ScrollbarSlimCSS} .CodeMirror-vscrollbar {
-            width: 20% !important;
-        }
-        
-        /* 自定义通知样式 */
-        .daily-task-success-notice {
-            background-color: rgba(0, 255, 127, 0.2) !important;
-        }
-        
-        .daily-task-warning-notice {
-            background-color: rgba(255, 165, 0, 0.2) !important;
-        }
-        
-        .daily-task-error-notice {
-            background-color: rgba(255, 69, 0, 0.2) !important;
-        }
-    `;
-    
-    // 添加自定义样式
-    const styleElement = document.createElement('style');
-    styleElement.textContent = cssText;
-    document.head.appendChild(styleElement);
+    // 样式已移至src/styles.css，无需在此处添加内联样式
+    // 插件加载时会自动加载styles.css文件
 }
 
 /**
@@ -127,7 +75,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 添加顶部间距（增加间距以改善界面美观）
         const topSpacing = containerEl.createEl('div');
-        topSpacing.style.marginTop = '30px';
+        topSpacing.classList.add(SettingTopSpaceCSS);
         
         // 根目录设置
         const rootDirSetting = new Setting(containerEl)
@@ -136,9 +84,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             
         // 创建输入框容器，使其可以包含额外元素
         const inputContainer = document.createElement('div');
-        inputContainer.style.display = 'flex';
-        inputContainer.style.width = '100%';
-        inputContainer.style.position = 'relative';
+        inputContainer.classList.add(InputContainerCSS);
         rootDirSetting.controlEl.appendChild(inputContainer);
         
         this.rootDirInput = new TextComponent(inputContainer)
@@ -153,37 +99,23 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 }
             });
         
-        // 给input元素直接设置placeholder属性
+        // 给input元素设置类和placeholder属性
         if (this.rootDirInput && this.rootDirInput.inputEl) {
+            this.rootDirInput.inputEl.classList.add(InputCSS);
             this.rootDirInput.inputEl.placeholder = 'DailyTasks';
-            // 增加宽度
-            this.rootDirInput.inputEl.style.width = '100%';
-            // 美化输入框样式
-            this.rootDirInput.inputEl.style.borderRadius = '4px';
-            this.rootDirInput.inputEl.style.padding = '8px 35px 8px 10px';
-            this.rootDirInput.inputEl.style.transition = 'all 0.3s ease';
         }
         
         // 添加自动保存指示器
         const saveIndicator = document.createElement('div');
-        saveIndicator.classList.add('save-indicator');
-        saveIndicator.style.position = 'absolute';
-        saveIndicator.style.right = '10px';
-        saveIndicator.style.top = '50%';
-        saveIndicator.style.transform = 'translateY(-50%)';
-        saveIndicator.style.opacity = '0';
-        saveIndicator.style.transition = 'opacity 0.3s ease';
+        saveIndicator.classList.add(SaveIndicatorCSS);
         inputContainer.appendChild(saveIndicator);
         
         // 创建保存成功图标
-        const saveSuccessIcon = createSpan({cls: 'svg-icon lucide-check'});
-        saveSuccessIcon.style.color = '#4CAF50';
-        saveSuccessIcon.style.width = '18px';
-        saveSuccessIcon.style.height = '18px';
+        const saveSuccessIcon = createSpan({cls: `svg-icon lucide-check ${SuccessIconCSS}`});
         saveIndicator.appendChild(saveSuccessIcon);
 
         // 记录自动保存定时器
-        let autoSaveTimer: number | null = null;
+        let autoSaveTimer: NodeJS.Timeout | null = null;
         
         // 自动保存方法
         this.autoSaveRootDir = async (value: string) => {
@@ -199,18 +131,17 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                     pathToSave = 'DailyTasks'; // 默认存放目录
                 }
                 
-                // 保存设置
+                // 实际保存设置
                 await this.settingsManager.updateSettings({ rootDir: pathToSave });
                 this.dirtySettings = false;
                 
-                // 显示保存成功指示器
+                // 显示保存成功的视觉反馈
                 saveIndicator.style.opacity = '1';
-                
-                // 3秒后隐藏
                 setTimeout(() => {
                     saveIndicator.style.opacity = '0';
-                }, 2000);
-            }, 800) as unknown as number;
+                }, 1500);
+                
+            }, 800);
         };
         
         // 自动生成模式

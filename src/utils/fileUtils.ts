@@ -173,10 +173,10 @@ export async function appendToFile(vault: Vault, path: string, content: string):
  */
 export async function fileContains(vault: Vault, path: string, content: string): Promise<boolean> {
     try {
-        const file = vault.getAbstractFileByPath(path);
-        if (file && file instanceof TFile) {
+        const abstractFile = vault.getAbstractFileByPath(path);
+        if (abstractFile && abstractFile instanceof TFile) {
             try {
-                const currentContent = await vault.read(file);
+                const currentContent = await vault.read(abstractFile);
                 return currentContent.includes(content);
             } catch (e) {
                 console.error(`读取文件内容时出错: ${e}`);
@@ -215,22 +215,24 @@ export function getTaskFilePath(rootDir: string): string {
  * @returns 是否已存在
  */
 export async function todayTaskExists(vault: Vault, rootDir: string): Promise<boolean> {
-    const taskFilePath = getTaskFilePath(rootDir);
-    const date = getCurrentDate();
-    
-    // 查找文件是否存在以及是否包含今天的日期标题（包括带图标格式）
     try {
-        console.log(`检查今日任务是否存在于: ${taskFilePath}`);
-        // 更改检查方式：改用正则表达式匹配任何包含当前日期的标题行
-        const file = vault.getAbstractFileByPath(taskFilePath);
-        if (file && file instanceof TFile) {
-            const content = await vault.read(file);
-            const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
-            return dateRegex.test(content);
+        const date = getCurrentDate();
+        const filePath = getTaskFilePath(rootDir);
+        
+        // 获取文件
+        const abstractFile = vault.getAbstractFileByPath(filePath);
+        if (!abstractFile || !(abstractFile instanceof TFile)) {
+            return false; // 文件不存在
         }
-        return false;
+        
+        // 读取文件内容
+        const content = await vault.read(abstractFile);
+        
+        // 更改检查方式：不仅检查纯日期，也检查带图标的日期格式
+        const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
+        return dateRegex.test(content);
     } catch (error) {
-        console.error(`检查今日任务时出错:`, error);
+        console.error("Error checking if today's task exists:", error);
         return false;
     }
 }
@@ -306,36 +308,47 @@ function getMonthNameEN(monthIndex: number): string {
 }
 
 /**
- * 从文件内容中提取特定日期的任务内容
- * @param vault Obsidian保险库
+ * 提取特定日期的任务内容
+ * @param vault Obsidian文件系统
  * @param filePath 文件路径
- * @param date 日期（YYYY-MM-DD格式）
- * @returns 该日期的任务内容或null
+ * @param date 日期字符串 (YYYY-MM-DD)
+ * @returns 任务内容或null
  */
 export async function extractTasksForDate(vault: Vault, filePath: string, date: string): Promise<string | null> {
     try {
-        // 检查文件是否存在
-        const file = vault.getAbstractFileByPath(filePath);
-        if (!file || !(file instanceof TFile)) {
-            console.log(`找不到文件: ${filePath}`);
-            return null;
+        // 获取文件
+        const abstractFile = vault.getAbstractFileByPath(filePath);
+        if (!abstractFile || !(abstractFile instanceof TFile)) {
+            return null; // 文件不存在
         }
-        
+
         // 读取文件内容
-        const content = await vault.read(file);
+        const content = await vault.read(abstractFile);
         
-        // 寻找日期标题，支持带图标格式
-        const dateHeaderRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n(.*?)(?=\\n## |$)`, 's');
-        const match = content.match(dateHeaderRegex);
+        // 找到日期标题行的位置
+        const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
+        const match = content.match(dateRegex);
         
-        if (match && match[1]) {
-            return match[1].trim();
+        if (!match || match.index === undefined) {
+            return null; // 找不到日期
         }
         
-        console.log(`找不到日期 ${date} 的任务内容`);
-        return null;
+        // 找到本日期部分的结束位置（下一个二级标题或文件结尾）
+        const startPos = match.index;
+        const nextHeadingMatch = content.slice(startPos + match[0].length).match(/\n## /);
+        let endPos: number;
+        
+        if (nextHeadingMatch && nextHeadingMatch.index !== undefined) {
+            endPos = startPos + match[0].length + nextHeadingMatch.index;
+        } else {
+            endPos = content.length;
+        }
+        
+        // 提取任务部分，包括标题
+        return content.slice(startPos, endPos).trim();
+        
     } catch (error) {
-        console.error(`提取任务内容时出错: ${error}`);
+        console.error(`Error extracting tasks for date ${date}:`, error);
         return null;
     }
 }
@@ -382,30 +395,32 @@ export function analyzeTaskCompletion(taskContent: string): {
 }
 
 /**
- * 检查昨日统计信息是否已存在
- * @param vault Obsidian保险库
- * @param filePath 文件路径
- * @param date 今日日期（用于检查昨日统计）
- * @returns 是否存在昨日统计信息
+ * 检查今日文件中是否已包含昨日统计信息
+ * @param vault Obsidian文件系统
+ * @param filePath 今日任务文件路径
+ * @param date 今日日期
+ * @returns 是否已包含昨日统计
  */
 export async function yesterdayStatisticsExists(vault: Vault, filePath: string, date: string): Promise<boolean> {
     try {
-        // 检查文件是否存在
-        const file = vault.getAbstractFileByPath(filePath);
-        if (!file || !(file instanceof TFile)) {
-            console.log(`找不到文件: ${filePath}`);
-            return false;
+        // 获取文件
+        const abstractFile = vault.getAbstractFileByPath(filePath);
+        if (!abstractFile || !(abstractFile instanceof TFile)) {
+            return false; // 文件不存在
         }
-        
+
         // 读取文件内容
-        const content = await vault.read(file);
+        const content = await vault.read(abstractFile);
         
-        // 寻找今日日期下的昨日统计标题，支持带图标格式
-        const statisticsTitleRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n.*?${getTranslation('statistics.title')}`, 's');
-        return statisticsTitleRegex.test(content);
+        // 检查是否包含昨日统计标记
+        const yesterdayDate = getYesterdayDate();
+        const statsTitle = getTranslation('statistics.title');
+        const statsRegex = new RegExp(`## [^\\n]*${date}[^\\n]*[\\s\\S]*?${statsTitle}`);
+        
+        return statsRegex.test(content);
     } catch (error) {
-        console.error(`检查昨日统计信息时出错: ${error}`);
-        return false;
+        console.error(`Error checking if yesterday statistics exists:`, error);
+        return false; // 出错时假设不存在
     }
 }
 

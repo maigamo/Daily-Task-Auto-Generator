@@ -88,4 +88,96 @@
 
 .daily-task-slim-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--interactive-accent-hover);
+}
+
+/* 设置组件样式 */
+.daily-task-settings-section {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding: 12px 0;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.daily-task-button {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.daily-task-preview-button, .daily-task-reset-button {
+    display: inline-block;
+    text-align: center !important;
+    width: 100%;
+}
+
+.daily-task-editor {
+    height: 200px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.daily-task-vertical-stack {
+    display: flex;
+    flex-direction: column;
+}
+
+.daily-task-text-right {
+    text-align: right;
+}
+
+.daily-task-text-center {
+    text-align: center !important;
+}
+
+.daily-task-slim-scrollbar .CodeMirror-vscrollbar {
+    width: 20% !important;
+}
+
+/* 自定义通知样式 */
+.daily-task-success-notice {
+    background-color: rgba(0, 255, 127, 0.2) !important;
+}
+
+.daily-task-warning-notice {
+    background-color: rgba(255, 165, 0, 0.2) !important;
+}
+
+.daily-task-error-notice {
+    background-color: rgba(255, 69, 0, 0.2) !important;
+}
+
+/* 输入框样式 */
+.daily-task-input {
+    width: 100%;
+    border-radius: 4px;
+    padding: 8px 35px 8px 10px;
+    transition: all 0.3s ease;
+}
+
+/* 保存指示器样式 */
+.daily-task-save-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* 成功图标样式 */
+.daily-task-success-icon {
+    color: #4CAF50;
+    width: 18px;
+    height: 18px;
+}
+
+/* 设置页面顶部间距 */
+.daily-task-setting-top-space {
+    margin-top: 30px;
+}
+
+/* 输入容器样式 */
+.daily-task-input-container {
+    display: flex;
+    width: 100%;
+    position: relative;
 } 
