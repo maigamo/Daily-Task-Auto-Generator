@@ -73,8 +73,6 @@ export class TaskGenerator {
             const existingTaskCheck = dateRegex.test(fileContent);
             
             if (existingTaskCheck) {
-                if (!quietMode) console.log(`今日(${date})任务已存在于文件中，跳过创建`);
-                
                 // 如果需要打开文件
                 if (openFile) {
                     // 显示提示并打开文件
@@ -117,8 +115,6 @@ export class TaskGenerator {
             const success = await appendToFile(this.vault, filePath, fullContent);
             
             if (success) {
-                if (!quietMode) console.log(`✅ 任务内容追加成功 ${date}`);
-                
                 // 如果需要打开文件
                 if (openFile) {
                     // 打开创建的文件
@@ -141,8 +137,6 @@ export class TaskGenerator {
             
             return success;
         } catch (error) {
-            console.error("Error generating daily task:", error);
-            
             // 显示错误通知
             const errorMsg = error instanceof Error ? error.message : String(error);
             this.showErrorNotice(`${getTranslation('notification.error')} ${errorMsg}`);
@@ -186,7 +180,6 @@ export class TaskGenerator {
             // 生成统计内容
             return generateStatisticsContent(taskStats, getTranslation);
         } catch (error) {
-            if (!quietMode) console.error("生成昨日统计出错:", error);
             return '';
         }
     }
@@ -203,8 +196,6 @@ export class TaskGenerator {
             // 调用任务生成逻辑，打开文件
             return await this.generateDailyTask(true);
         } catch (error) {
-            console.error("手动添加任务失败:", error);
-            
             // 显示错误通知
             const errorMsg = error instanceof Error ? error.message : String(error);
             this.showErrorNotice(`${getTranslation('notification.error')} ${errorMsg}`);

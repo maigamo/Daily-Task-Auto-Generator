@@ -3,6 +3,7 @@ import { AutoGenerateMode, DEFAULT_SETTINGS, DEFAULT_TEMPLATE_EN, DEFAULT_TEMPLA
 import { getTranslation, setCurrentLanguage } from '../i18n/i18n';
 import { renderTemplate } from '../utils/templateEngine';
 import { TaskGenerator } from '../taskGenerator';
+import { setTextContentByLines, createIconButton, createTextElement } from '../utils/domUtils';
 
 // 前向声明，避免循环导入
 declare class DailyTaskPlugin {
@@ -74,8 +75,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         const settings = this.settingsManager.getSettings();
         
         // 添加顶部间距（增加间距以改善界面美观）
-        const topSpacing = containerEl.createEl('div');
+        const topSpacing = document.createElement('div');
         topSpacing.classList.add(SettingTopSpaceCSS);
+        containerEl.appendChild(topSpacing);
         
         // 根目录设置
         const rootDirSetting = new Setting(containerEl)
@@ -111,7 +113,8 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         inputContainer.appendChild(saveIndicator);
         
         // 创建保存成功图标
-        const saveSuccessIcon = createSpan({cls: `svg-icon lucide-check ${SuccessIconCSS}`});
+        const saveSuccessIcon = document.createElement('span');
+        saveSuccessIcon.classList.add('svg-icon', 'lucide-check', SuccessIconCSS);
         saveIndicator.appendChild(saveSuccessIcon);
 
         // 记录自动保存定时器
@@ -152,8 +155,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         // 自定义三选滑块
         const toggleContainer = document.createElement('div');
         toggleContainer.classList.add('mode-toggle-container');
-        toggleContainer.style.width = '20%'; // 缩短滑动条长度为原来的20%
-        toggleContainer.style.marginLeft = 'auto'; // 靠右显示
+        autoGenSetting.controlEl.appendChild(toggleContainer);
         
         const modes = [
             { value: AutoGenerateMode.NONE, label: getTranslation('settings.mode.none') },
@@ -207,8 +209,6 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             
             toggleContainer.appendChild(option);
         });
-        
-        autoGenSetting.controlEl.appendChild(toggleContainer);
         
         // 语言设置
         new Setting(containerEl)
@@ -268,14 +268,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                     // 添加图标 - 使用DOM父元素访问
                     const toggleContainer = toggleControl.parentElement;
                     if (toggleContainer) {
-                        const iconEl = createSpan({cls: 'svg-icon lucide-bar-chart-2'});
-                        iconEl.style.marginRight = '8px';
-                        iconEl.style.color = 'var(--text-accent)';
+                        const iconEl = document.createElement('span');
+                        iconEl.classList.add('svg-icon', 'lucide-bar-chart-2');
                         toggleContainer.prepend(iconEl);
-                        
-                        // 添加过渡效果
-                        toggleContainer.style.transition = 'all 0.3s ease';
-                        toggleControl.style.transition = 'all 0.3s ease';
                     }
                 }
                 
@@ -283,25 +278,32 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             });
         
         // 模板设置
-        containerEl.createEl('h3', { text: getTranslation('settings.template') });
+        const templateHeader = document.createElement('h3');
+        templateHeader.textContent = getTranslation('settings.template');
+        containerEl.appendChild(templateHeader);
         
         // 添加模板使用逻辑说明
-        const templateDescription = containerEl.createEl('p', { 
-            text: this.settingsManager.getCurrentLanguage() === 'zh' ?
-                '注意：默认模板会根据当前语言环境自动选择对应语言的内容。如果您自定义模板，将在所有语言环境中使用您的自定义内容。' :
-                'Note: Default template automatically adapts to your language environment. If you customize the template, your content will be used in all language environments.'
-        });
-        templateDescription.style.fontSize = '0.85em';
-        templateDescription.style.opacity = '0.8';
-        templateDescription.style.marginBottom = '15px';
+        const templateDescription = document.createElement('p');
+        templateDescription.classList.add('template-description');
+        templateDescription.textContent = this.settingsManager.getCurrentLanguage() === 'zh' ?
+            '注意：默认模板会根据当前语言环境自动选择对应语言的内容。如果您自定义模板，将在所有语言环境中使用您的自定义内容。' :
+            'Note: Default template automatically adapts to your language environment. If you customize the template, your content will be used in all language environments.';
+        containerEl.appendChild(templateDescription);
         
         // 添加模板变量说明
-        const templateVariablesEl = containerEl.createEl('p');
-        templateVariablesEl.innerHTML = this.settingsManager.getCurrentLanguage() === 'zh' ?
+        const templateVariablesEl = document.createElement('div');
+        templateVariablesEl.classList.add('template-variables');
+        const variablesContent = this.settingsManager.getCurrentLanguage() === 'zh' ?
             '<strong>可用变量：</strong> {{date}} - 日期, {{dateWithIcon}} - 带图标的日期, {{weekday}} - 星期几, {{yearProgress}} - 年进度, {{monthProgress}} - 月进度, {{time}} - 当前时间' :
             '<strong>Available variables:</strong> {{date}} - Date, {{dateWithIcon}} - Date with icon, {{weekday}} - Day of week, {{yearProgress}} - Year progress, {{monthProgress}} - Month progress, {{time}} - Current time';
-        templateVariablesEl.style.fontSize = '0.85em';
-        templateVariablesEl.style.marginBottom = '10px';
+        
+        // 使用setElementContent安全地设置HTML内容
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = variablesContent;
+        while (tempDiv.firstChild) {
+            templateVariablesEl.appendChild(tempDiv.firstChild);
+        }
+        containerEl.appendChild(templateVariablesEl);
         
         // 单一模板设置
         const templateSetting = new Setting(containerEl)
@@ -309,6 +311,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             .setClass('template-setting');
         
         const templateContainer = document.createElement('div');
+        templateContainer.classList.add('template-container');
         templateContainer.style.width = '100%';
         
         // 获取当前模板内容
@@ -330,52 +333,20 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 this.updatePreview(this.previewEl, value);
             });
         
-        // 改进TextArea样式
+        // 添加样式类
         textarea.inputEl.classList.add('template-editor');
-        textarea.inputEl.style.height = '200px';
-        textarea.inputEl.style.border = '1px solid var(--background-modifier-border-hover)';
-        textarea.inputEl.style.borderRadius = '4px';
-        textarea.inputEl.style.padding = '12px';
-        textarea.inputEl.style.lineHeight = '1.5';
-        textarea.inputEl.style.fontSize = '14px';
-        textarea.inputEl.style.fontFamily = 'var(--font-monospace)';
-        textarea.inputEl.style.transition = 'all 0.2s ease';
-        textarea.inputEl.style.boxShadow = 'inset 0 1px 3px rgba(0, 0, 0, 0.1)';
-        textarea.inputEl.style.backgroundColor = 'var(--background-primary)';
-        textarea.inputEl.style.color = 'var(--text-normal)';
-        textarea.inputEl.style.resize = 'vertical';
-        
-        // 当获取焦点时改变边框样式
-        textarea.inputEl.addEventListener('focus', () => {
-            textarea.inputEl.style.border = '1px solid var(--interactive-accent)';
-            textarea.inputEl.style.boxShadow = '0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1)';
-            textarea.inputEl.style.outline = 'none';
-        });
-        
-        // 失去焦点时恢复原来的边框样式
-        textarea.inputEl.addEventListener('blur', () => {
-            textarea.inputEl.style.border = '1px solid var(--background-modifier-border-hover)';
-            textarea.inputEl.style.boxShadow = 'inset 0 1px 3px rgba(0, 0, 0, 0.1)';
-        });
         
         // 预览标题，使用flex布局居中
         const previewHeader = document.createElement('div');
         previewHeader.classList.add('template-preview-header');
-        previewHeader.style.display = 'flex';
-        previewHeader.style.justifyContent = 'space-between'; // 改为两端对齐
-        previewHeader.style.marginTop = '15px';
-        previewHeader.style.marginBottom = '10px';
-        previewHeader.style.width = '100%';
         
         // 预览按钮容器 - 左侧
         const previewBtnContainer = document.createElement('div');
-        previewBtnContainer.style.display = 'flex';
-        previewBtnContainer.style.alignItems = 'center';
+        previewBtnContainer.classList.add('button-container');
         
         // 重置按钮容器 - 右侧
         const resetBtnContainer = document.createElement('div');
-        resetBtnContainer.style.display = 'flex';
-        resetBtnContainer.style.alignItems = 'center';
+        resetBtnContainer.classList.add('button-container');
         
         // 预览按钮 - 改进样式
         const toggleButton = new ButtonComponent(previewBtnContainer)
@@ -383,32 +354,17 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 添加样式类
         toggleButton.buttonEl.addClass(TextCenterCSS);
-        toggleButton.buttonEl.style.textAlign = 'center';
-        toggleButton.buttonEl.style.display = 'flex';
-        toggleButton.buttonEl.style.alignItems = 'center';
-        toggleButton.buttonEl.style.justifyContent = 'center';
-        toggleButton.buttonEl.style.width = '130px';
-        toggleButton.buttonEl.style.borderRadius = '4px';
-        toggleButton.buttonEl.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-        toggleButton.buttonEl.style.transition = 'all 0.2s ease';
+        toggleButton.buttonEl.addClass('daily-task-button-common');
+        toggleButton.buttonEl.addClass('daily-task-button-md');
         
         // 手动添加眼睛图标
-        const eyeIcon = createSpan({cls: 'svg-icon lucide-eye'});
-        eyeIcon.style.marginRight = '6px';
+        const eyeIcon = document.createElement('span');
+        eyeIcon.classList.add('svg-icon', 'lucide-eye');
         toggleButton.buttonEl.prepend(eyeIcon);
         
         // 预览区域
         this.previewEl = document.createElement('div');
         this.previewEl.classList.add('template-preview');
-        this.previewEl.style.marginTop = '15px';
-        this.previewEl.style.padding = '15px';
-        this.previewEl.style.border = '1px dashed var(--background-modifier-border)';
-        this.previewEl.style.borderRadius = '8px';
-        this.previewEl.style.backgroundColor = 'var(--background-secondary)';
-        this.previewEl.style.display = 'none';
-        this.previewEl.style.maxHeight = '200px';
-        this.previewEl.style.overflow = 'auto';
-        this.previewEl.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.1)';
         this.updatePreview(this.previewEl, currentTemplate);
         templateContainer.appendChild(this.previewEl);
         
@@ -418,11 +374,11 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             if (this.previewEl && this.previewEl.classList.contains('visible')) {
                 eyeIcon.className = 'svg-icon lucide-eye-off';
                 toggleButton.setButtonText(getTranslation('settings.template.hide'));
-                toggleButton.buttonEl.style.backgroundColor = 'var(--background-modifier-success)';
+                toggleButton.buttonEl.classList.add('success-button');
             } else {
                 eyeIcon.className = 'svg-icon lucide-eye';
                 toggleButton.setButtonText(getTranslation('settings.template.preview'));
-                toggleButton.buttonEl.style.backgroundColor = '';
+                toggleButton.buttonEl.classList.remove('success-button');
             }
         });
         
@@ -432,18 +388,12 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 添加样式类
         resetBtn.buttonEl.addClass(TextCenterCSS);
-        resetBtn.buttonEl.style.textAlign = 'center';
-        resetBtn.buttonEl.style.display = 'flex';
-        resetBtn.buttonEl.style.alignItems = 'center';
-        resetBtn.buttonEl.style.justifyContent = 'center';
-        resetBtn.buttonEl.style.width = '150px';
-        resetBtn.buttonEl.style.borderRadius = '4px';
-        resetBtn.buttonEl.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-        resetBtn.buttonEl.style.transition = 'all 0.2s ease';
+        resetBtn.buttonEl.addClass('daily-task-button-common');
+        resetBtn.buttonEl.addClass('daily-task-button-lg');
         
         // 添加重置图标
-        const resetIcon = createSpan({cls: 'svg-icon lucide-refresh-cw'});
-        resetIcon.style.marginRight = '6px';
+        const resetIcon = document.createElement('span');
+        resetIcon.classList.add('svg-icon', 'lucide-refresh-cw');
         resetBtn.buttonEl.prepend(resetIcon);
         
         // 添加重置事件
@@ -462,9 +412,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             this.updatePreview(this.previewEl, defaultTemplate);
             
             // 显示成功提示动画
-            resetBtn.buttonEl.style.backgroundColor = 'var(--background-modifier-success)';
+            resetBtn.buttonEl.classList.add('success-button');
             setTimeout(() => {
-                resetBtn.buttonEl.style.backgroundColor = '';
+                resetBtn.buttonEl.classList.remove('success-button');
             }, 1000);
         });
         
@@ -477,10 +427,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 恢复默认设置 - 创建容器让按钮右对齐
         const resetContainer = document.createElement('div');
-        resetContainer.style.display = 'flex';
-        resetContainer.style.justifyContent = 'flex-end'; // 确保右对齐
-        resetContainer.style.marginTop = '20px';
-        resetContainer.style.marginBottom = '10px';
+        resetContainer.classList.add('button-container');
         containerEl.appendChild(resetContainer);
         
         // 恢复默认设置按钮
@@ -490,14 +437,13 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         // 添加样式类
         resetDefaultBtn.buttonEl.addClass(TextCenterCSS);
         resetDefaultBtn.buttonEl.addClass('danger-button');
-        resetDefaultBtn.buttonEl.style.textAlign = 'center';
-        resetDefaultBtn.buttonEl.style.display = 'flex';
-        resetDefaultBtn.buttonEl.style.alignItems = 'center';
-        resetDefaultBtn.buttonEl.style.justifyContent = 'center';
-        resetDefaultBtn.buttonEl.style.width = '150px';
+        resetDefaultBtn.buttonEl.addClass('daily-task-button-common');
+        resetDefaultBtn.buttonEl.addClass('daily-task-button-lg');
         
-        // 添加重置图标和危险按钮样式
-        resetDefaultBtn.buttonEl.prepend(createSpan({cls: 'svg-icon lucide-refresh-cw'}));
+        // 添加重置图标
+        const resetIcon2 = document.createElement('span');
+        resetIcon2.classList.add('svg-icon', 'lucide-refresh-cw');
+        resetDefaultBtn.buttonEl.prepend(resetIcon2);
         
         // 为全局重置按钮添加事件处理
         resetDefaultBtn.onClick(async () => {
@@ -507,9 +453,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 手动添加今日任务按钮 - 右对齐显示
         const addTaskContainer = document.createElement('div');
-        addTaskContainer.style.display = 'flex';
-        addTaskContainer.style.justifyContent = 'flex-end'; // 确保右对齐
-        addTaskContainer.style.marginTop = '20px';
+        addTaskContainer.classList.add('button-container');
         containerEl.appendChild(addTaskContainer);
         
         this.addTaskButton = new ButtonComponent(addTaskContainer)
@@ -519,10 +463,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         // 添加样式类 - 确保按钮文字居中
         if (this.addTaskButton && this.addTaskButton.buttonEl) {
             this.addTaskButton.buttonEl.addClass(TextCenterCSS);
-            this.addTaskButton.buttonEl.style.textAlign = 'center';
-            this.addTaskButton.buttonEl.style.display = 'flex';
-            this.addTaskButton.buttonEl.style.alignItems = 'center';
-            this.addTaskButton.buttonEl.style.justifyContent = 'center';
+            this.addTaskButton.buttonEl.addClass('daily-task-button-common');
         }
 
         // 手动添加任务按钮事件处理
@@ -540,7 +481,6 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 // 添加任务
                 await this.taskGenerator.addTaskManually();
             } catch (e) {
-                console.error("添加任务出错:", e);
                 new Notice(`添加任务失败: ${e.message || e}`);
             } finally {
                 // 移除loading状态
@@ -554,7 +494,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         });
 
         // 添加图标
-        this.addTaskButton.buttonEl.prepend(createSpan({cls: 'svg-icon lucide-calendar-plus'}));
+        const calendarIcon = document.createElement('span');
+        calendarIcon.classList.add('svg-icon', 'lucide-calendar-plus');
+        this.addTaskButton.buttonEl.prepend(calendarIcon);
     }
     
     /**
@@ -564,8 +506,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         if (!previewEl) return;
         
         const renderedContent = renderTemplate(template);
-        // 使用MarkdownRenderer需要导入相关组件
-        previewEl.innerHTML = renderedContent.replace(/\n/g, '<br>');
+        
+        // 使用domUtils中的工具函数安全地设置内容
+        setTextContentByLines(previewEl, renderedContent);
     }
     
     /**
@@ -623,14 +566,14 @@ export class SettingsManager {
      * 保存设置到数据存储
      */
     async saveSettings(): Promise<void> {
-        await this.plugin.saveData(this.settings);
+        await (this.plugin as any).saveData(this.settings);
     }
 
     /**
      * 加载设置
      */
     async loadSettings(): Promise<void> {
-        const loadedData = await this.plugin.loadData();
+        const loadedData = await (this.plugin as any).loadData();
         if (loadedData) {
             // 合并默认设置和已保存的设置
             this.settings = {

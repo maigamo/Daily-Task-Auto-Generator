@@ -16,55 +16,25 @@ import { DEFAULT_SETTINGS } from '../settings/index';
  */
 export async function ensureFolderExists(vault: Vault, path: string): Promise<boolean> {
     try {
-        // 确保路径以/结尾，便于处理
-        path = path.endsWith('/') ? path : path + '/';
-
-        // 逐级创建目录
-        const folders = path.split('/').filter(p => p.length > 0);
+        const folderParts = path.split('/').filter(part => part.trim() !== '');
         let currentPath = '';
-        
-        for (const folder of folders) {
-            // 更新当前路径
+
+        for (const part of folderParts) {
             if (currentPath) {
-                currentPath += '/' + folder;
+                currentPath += '/' + part;
             } else {
-                currentPath = folder;
+                currentPath = part;
             }
+
+            const normalizedPath = normalizePath(currentPath);
+            const folder = vault.getAbstractFileByPath(normalizedPath);
             
-            // 检查路径是否存在
-            console.log(`检查目录: ${currentPath}`);
-            const existingItem = vault.getAbstractFileByPath(currentPath);
-            
-            if (!existingItem) {
-                // 路径不存在，创建文件夹
-                console.log(`目录不存在，正在创建: ${currentPath}`);
-                try {
-                    await vault.createFolder(currentPath);
-                    console.log(`目录创建成功: ${currentPath}`);
-                } catch (e) {
-                    // 捕获可能的"文件夹已存在"错误，但继续执行
-                    // 这里处理可能的竞态条件：检查不存在但创建时已存在的情况
-                    console.log(`创建目录时出现异常，可能已被其他进程创建: ${e}`);
-                    // 再次检查目录是否存在
-                    const folderAfterError = vault.getAbstractFileByPath(currentPath);
-                    if (!folderAfterError || !(folderAfterError instanceof TFolder)) {
-                        console.error(`目录创建失败，且无法确认目录已存在: ${currentPath}`);
-                        return false;
-                    }
-                }
-            } else if (!(existingItem instanceof TFolder)) {
-                // 路径存在但不是文件夹（可能是同名文件）
-                console.error(`路径 ${currentPath} 已存在但不是文件夹，而是: ${existingItem.constructor.name}`);
-                return false;
-            } else {
-                // 文件夹已存在，继续检查下一级
-                console.log(`目录已存在，无需创建: ${currentPath}`);
+            if (!folder) {
+                await vault.createFolder(normalizedPath);
             }
         }
-        
         return true;
     } catch (error) {
-        console.error(`创建目录时出现未预期错误(${path}):`, error);
         return false;
     }
 }
@@ -78,57 +48,26 @@ export async function ensureFolderExists(vault: Vault, path: string): Promise<bo
  */
 export async function ensureFileExists(vault: Vault, path: string, content: string = ''): Promise<boolean> {
     try {
-        // 先检查这个路径是否有文件或目录
-        const existingItem = vault.getAbstractFileByPath(path);
+        // 确保文件夹结构存在
+        const normalizedPath = normalizePath(path);
+        const folderPath = normalizedPath.substring(0, normalizedPath.lastIndexOf('/'));
         
-        // 如果已存在
-        if (existingItem) {
-            // 检查是否为文件而不是文件夹
-            if (existingItem instanceof TFile) {
-                console.log(`文件已存在，无需创建: ${path}`);
-                return true; // 文件已存在，跳过创建
-            } else {
-                // 存在但不是文件（可能是同名文件夹）
-                console.error(`路径 ${path} 存在但不是文件，无法创建文件，可能是同名目录`);
-                return false;
-            }
-        }
-        
-        // 文件不存在，检查父文件夹是否存在
-        const lastSlashIndex = path.lastIndexOf('/');
-        if (lastSlashIndex > 0) {
-            const parentPath = path.substring(0, lastSlashIndex);
-            console.log(`检查文件父目录: ${parentPath}`);
-            const parentExists = await ensureFolderExists(vault, parentPath);
-            if (!parentExists) {
-                console.error(`无法确保父目录存在: ${parentPath}`);
+        if (folderPath) {
+            const folderExists = await ensureFolderExists(vault, folderPath);
+            if (!folderExists) {
                 return false;
             }
         }
 
-        // 创建文件
-        try {
-            console.log(`开始创建文件: ${path}`);
-            await vault.create(path, content);
-            console.log(`文件创建成功: ${path}`);
-            return true;
-        } catch (e) {
-            // 如果创建时报错，再次检查文件是否已被创建
-            // 这可能是由于竞态条件或其他进程同时创建了该文件
-            console.log(`创建文件时出现异常: ${e}`);
-            
-            // 再次检查文件是否存在
-            const fileAfterError = vault.getAbstractFileByPath(path);
-            if (fileAfterError && fileAfterError instanceof TFile) {
-                console.log(`尽管出现异常，但文件已存在，可能被其他进程创建: ${path}`);
-                return true;
-            }
-            
-            console.error(`文件创建最终失败: ${path}`);
-            return false;
+        // 检查文件是否存在
+        const file = vault.getAbstractFileByPath(normalizedPath);
+        
+        if (!file) {
+            // 创建文件并写入内容
+            await vault.create(normalizedPath, content);
         }
+        return true;
     } catch (error) {
-        console.error(`创建文件时出现未预期错误(${path}):`, error);
         return false;
     }
 }
@@ -142,24 +81,31 @@ export async function ensureFileExists(vault: Vault, path: string, content: stri
  */
 export async function appendToFile(vault: Vault, path: string, content: string): Promise<boolean> {
     try {
-        const file = vault.getAbstractFileByPath(path);
-        if (file && file instanceof TFile) {
-            // 文件存在，追加内容
-            try {
-                const currentContent = await vault.read(file);
-                await vault.modify(file, currentContent + "\n\n" + content);
-                return true;
-            } catch (e) {
-                console.error(`读取或修改文件时出错: ${e}`);
-                return false;
-            }
-        } else {
-            // 文件不存在，创建文件并写入内容
-            console.log(`文件不存在，尝试创建: ${path}`);
-            return await ensureFileExists(vault, path, content);
+        const normalizedPath = normalizePath(path);
+        
+        // 确保文件存在
+        const fileExists = await ensureFileExists(vault, normalizedPath);
+        if (!fileExists) {
+            return false;
         }
+
+        // 获取文件对象
+        const file = vault.getAbstractFileByPath(normalizedPath);
+        if (!(file instanceof TFile)) {
+            return false;
+        }
+        
+        // 读取文件当前内容
+        const currentContent = await vault.read(file);
+        
+        // 追加新内容
+        const newContent = currentContent + '\n' + content;
+        
+        // 将合并后的内容写回文件
+        await vault.modify(file, newContent);
+        
+        return true;
     } catch (error) {
-        console.error(`Error appending to file at ${path}:`, error);
         return false;
     }
 }
@@ -173,21 +119,20 @@ export async function appendToFile(vault: Vault, path: string, content: string):
  */
 export async function fileContains(vault: Vault, path: string, content: string): Promise<boolean> {
     try {
-        const abstractFile = vault.getAbstractFileByPath(path);
-        if (abstractFile && abstractFile instanceof TFile) {
-            try {
-                const currentContent = await vault.read(abstractFile);
-                return currentContent.includes(content);
-            } catch (e) {
-                console.error(`读取文件内容时出错: ${e}`);
-                return false;
-            }
+        const normalizedPath = normalizePath(path);
+        
+        // 获取文件对象
+        const file = vault.getAbstractFileByPath(normalizedPath);
+        if (!(file instanceof TFile)) {
+            return false;
         }
-        // 文件不存在，显然不包含指定内容
-        console.log(`文件不存在，无法检查内容: ${path}`);
-        return false;
+
+        // 读取文件内容
+        const fileContent = await vault.read(file);
+        
+        // 检查是否包含指定内容
+        return fileContent.includes(content);
     } catch (error) {
-        console.error(`Error checking file content at ${path}:`, error);
         return false;
     }
 }
@@ -198,14 +143,13 @@ export async function fileContains(vault: Vault, path: string, content: string):
  * @returns 任务文件路径
  */
 export function getTaskFilePath(rootDir: string): string {
-    const year = getCurrentYear();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
     
-    // 根据环境选择不同的月份命名方式
-    const isEnglish = isEnglishEnvironment();
-    const monthName = getLocalizedMonthName(isEnglish);
-    
-    // 使用本地化的月份名称生成文件路径
-    return normalizePath(`${rootDir}/${year}/${monthName}.md`);
+    const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    return normalizePath(`${rootDir}/${formattedDate}.md`);
 }
 
 /**
@@ -215,26 +159,8 @@ export function getTaskFilePath(rootDir: string): string {
  * @returns 是否已存在
  */
 export async function todayTaskExists(vault: Vault, rootDir: string): Promise<boolean> {
-    try {
-        const date = getCurrentDate();
-        const filePath = getTaskFilePath(rootDir);
-        
-        // 获取文件
-        const abstractFile = vault.getAbstractFileByPath(filePath);
-        if (!abstractFile || !(abstractFile instanceof TFile)) {
-            return false; // 文件不存在
-        }
-        
-        // 读取文件内容
-        const content = await vault.read(abstractFile);
-        
-        // 更改检查方式：不仅检查纯日期，也检查带图标的日期格式
-        const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
-        return dateRegex.test(content);
-    } catch (error) {
-        console.error("Error checking if today's task exists:", error);
-        return false;
-    }
+    const taskFilePath = getTaskFilePath(rootDir);
+    return vault.getAbstractFileByPath(taskFilePath) !== null;
 }
 
 /**
@@ -247,10 +173,10 @@ export function getYesterdayDate(): string {
     yesterday.setDate(today.getDate() - 1);
     
     const year = yesterday.getFullYear();
-    const month = (yesterday.getMonth() + 1).toString().padStart(2, '0');
-    const day = yesterday.getDate().toString().padStart(2, '0');
+    const month = yesterday.getMonth() + 1;
+    const day = yesterday.getDate();
     
-    return `${year}-${month}-${day}`;
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -259,26 +185,31 @@ export function getYesterdayDate(): string {
  * @returns 前一天任务文件的路径
  */
 export function getYesterdayTaskFilePath(rootDir: string): string {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = getYesterdayDate();
+    return normalizePath(`${rootDir}/${yesterdayDate}.md`);
+}
+
+/**
+ * 格式化日期用于显示
+ * @param date 日期字符串
+ * @param locale 语言区域设置
+ * @returns 格式化后的日期字符串
+ */
+export function formatDateForDisplay(date: string, locale: string = 'en'): string {
+    if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return date;
+    }
     
-    const year = yesterday.getFullYear().toString();
-    const isEnglish = isEnglishEnvironment();
+    const [year, month, day] = date.split('-').map(part => parseInt(part, 10));
+    const monthIndex = month - 1;
     
-    // 获取本地化的月份名称
-    const month = new Date().getMonth();
-    const yesterdayMonth = yesterday.getMonth();
-    
-    // 创建一个临时Date对象用于获取前一天的月份
-    const tempDate = new Date();
-    tempDate.setMonth(yesterdayMonth);
-    
-    // 判断是否为英文环境，获取对应的月份名称
-    const monthName = isEnglish ? 
-        getMonthNameEN(yesterdayMonth) : 
-        getMonthNameZH(yesterdayMonth);
-    
-    return normalizePath(`${rootDir}/${year}/${monthName}.md`);
+    if (locale === 'zh') {
+        const monthName = getMonthNameZH(monthIndex);
+        return `${year}年${monthName}${day}日`;
+    } else {
+        const monthName = getMonthNameEN(monthIndex);
+        return `${monthName} ${day}, ${year}`;
+    }
 }
 
 /**
@@ -287,11 +218,9 @@ export function getYesterdayTaskFilePath(rootDir: string): string {
  * @returns 中文月份名称
  */
 function getMonthNameZH(monthIndex: number): string {
-    const months = [
-        "1月", "2月", "3月", "4月", "5月", "6月",
-        "7月", "8月", "9月", "10月", "11月", "12月"
-    ];
-    return months[monthIndex];
+    const months = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                   '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    return months[monthIndex] || '';
 }
 
 /**
@@ -300,11 +229,9 @@ function getMonthNameZH(monthIndex: number): string {
  * @returns 英文月份名称
  */
 function getMonthNameEN(monthIndex: number): string {
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-    return months[monthIndex];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[monthIndex] || '';
 }
 
 /**
@@ -316,39 +243,34 @@ function getMonthNameEN(monthIndex: number): string {
  */
 export async function extractTasksForDate(vault: Vault, filePath: string, date: string): Promise<string | null> {
     try {
-        // 获取文件
-        const abstractFile = vault.getAbstractFileByPath(filePath);
-        if (!abstractFile || !(abstractFile instanceof TFile)) {
-            return null; // 文件不存在
-        }
-
-        // 读取文件内容
-        const content = await vault.read(abstractFile);
-        
-        // 找到日期标题行的位置
-        const dateRegex = new RegExp(`## [^\\n]*${date}[^\\n]*\\n`);
-        const match = content.match(dateRegex);
-        
-        if (!match || match.index === undefined) {
-            return null; // 找不到日期
+        // 检查任务文件是否存在
+        const normalizedPath = normalizePath(filePath);
+        const file = vault.getAbstractFileByPath(normalizedPath);
+        if (!(file instanceof TFile)) {
+            return null;
         }
         
-        // 找到本日期部分的结束位置（下一个二级标题或文件结尾）
-        const startPos = match.index;
-        const nextHeadingMatch = content.slice(startPos + match[0].length).match(/\n## /);
-        let endPos: number;
+        // 读取任务文件内容
+        const fileContent = await vault.read(file);
         
-        if (nextHeadingMatch && nextHeadingMatch.index !== undefined) {
-            endPos = startPos + match[0].length + nextHeadingMatch.index;
-        } else {
-            endPos = content.length;
+        // 将内容分割成各部分，寻找任务部分
+        const sections = fileContent.split(/^##\s+/m);
+        let tasksSection: string | null = null;
+        
+        for (const section of sections) {
+            if (section.trim().startsWith('Tasks')) {
+                tasksSection = section;
+                break;
+            }
         }
         
-        // 提取任务部分，包括标题
-        return content.slice(startPos, endPos).trim();
+        if (!tasksSection) {
+            return null;
+        }
         
+        // 返回任务部分
+        return tasksSection.trim();
     } catch (error) {
-        console.error(`Error extracting tasks for date ${date}:`, error);
         return null;
     }
 }
@@ -363,35 +285,43 @@ export function analyzeTaskCompletion(taskContent: string): {
     completedTasks: number;
     unfinishedTasksList: string[];
 } {
-    // 默认返回结果
-    const result = {
-        totalTasks: 0,
-        completedTasks: 0,
-        unfinishedTasksList: [] as string[]
-    };
-    
     if (!taskContent) {
-        return result;
+        return {
+            totalTasks: 0,
+            completedTasks: 0,
+            unfinishedTasksList: []
+        };
     }
     
-    // 匹配所有任务行（包括已完成和未完成）
-    const allTasksRegex = /- \[([ x])\] (.+)$/gm;
-    const completedTasksRegex = /- \[x\] (.+)$/gm;
-    const unfinishedTasksRegex = /- \[ \] (.+)$/gm;
+    // 将内容分割成行
+    const lines = taskContent.split('\n');
     
-    // 统计总任务数
-    const allTasksMatches = [...taskContent.matchAll(allTasksRegex)];
-    result.totalTasks = allTasksMatches.length;
+    let totalTasks = 0;
+    let completedTasks = 0;
+    const unfinishedTasksList: string[] = [];
     
-    // 统计已完成任务数
-    const completedTasksMatches = [...taskContent.matchAll(completedTasksRegex)];
-    result.completedTasks = completedTasksMatches.length;
+    // 分析每行是否包含任务复选框
+    for (const line of lines) {
+        // 检查行是否包含任务复选框
+        const taskMatch = line.match(/^\s*-\s*\[([ xX])\]\s*(.+)$/);
+        if (taskMatch) {
+            totalTasks++;
+            
+            // 检查任务是否已完成
+            if (taskMatch[1].toLowerCase() === 'x') {
+                completedTasks++;
+            } else {
+                // 将任务内容添加到未完成任务列表
+                unfinishedTasksList.push(taskMatch[2].trim());
+            }
+        }
+    }
     
-    // 提取未完成任务内容
-    const unfinishedTasksMatches = [...taskContent.matchAll(unfinishedTasksRegex)];
-    result.unfinishedTasksList = unfinishedTasksMatches.map(match => match[1].trim());
-    
-    return result;
+    return {
+        totalTasks,
+        completedTasks,
+        unfinishedTasksList
+    };
 }
 
 /**
@@ -403,24 +333,21 @@ export function analyzeTaskCompletion(taskContent: string): {
  */
 export async function yesterdayStatisticsExists(vault: Vault, filePath: string, date: string): Promise<boolean> {
     try {
-        // 获取文件
-        const abstractFile = vault.getAbstractFileByPath(filePath);
-        if (!abstractFile || !(abstractFile instanceof TFile)) {
-            return false; // 文件不存在
+        // 检查今日任务文件是否存在
+        const normalizedPath = normalizePath(filePath);
+        const file = vault.getAbstractFileByPath(normalizedPath);
+        if (!(file instanceof TFile)) {
+            return false;
         }
-
-        // 读取文件内容
-        const content = await vault.read(abstractFile);
         
-        // 检查是否包含昨日统计标记
-        const yesterdayDate = getYesterdayDate();
-        const statsTitle = getTranslation('statistics.title');
-        const statsRegex = new RegExp(`## [^\\n]*${date}[^\\n]*[\\s\\S]*?${statsTitle}`);
+        // 读取今日任务文件内容
+        const fileContent = await vault.read(file);
         
-        return statsRegex.test(content);
+        // 检查是否已包含昨日统计信息
+        const statisticsHeader = `## ${getTranslation('statistics.title')}`;
+        return fileContent.includes(statisticsHeader);
     } catch (error) {
-        console.error(`Error checking if yesterday statistics exists:`, error);
-        return false; // 出错时假设不存在
+        return false;
     }
 }
 
@@ -434,21 +361,18 @@ export function generateStatisticsContent(
     tasks: { totalTasks: number; completedTasks: number; unfinishedTasksList: string[] } | { task: string; isCompleted: boolean }[],
     t: (key: TranslationKey) => string
 ): string {
-    let totalTasks: number;
-    let completedTasks: number;
+    let totalTasks = 0;
+    let completedTasks = 0;
     let unfinishedTasks: { task: string }[] = [];
     
-    // 检查输入类型
-    if (Array.isArray(tasks)) {
-        // 如果是任务列表数组
-        totalTasks = tasks.length;
-        completedTasks = tasks.filter(task => task.isCompleted).length;
-        unfinishedTasks = tasks.filter(task => !task.isCompleted).map(task => ({ task: task.task }));
-    } else {
-        // 如果是统计对象
+    if (!Array.isArray(tasks)) {
         totalTasks = tasks.totalTasks;
         completedTasks = tasks.completedTasks;
         unfinishedTasks = tasks.unfinishedTasksList.map(task => ({ task }));
+    } else {
+        totalTasks = tasks.length;
+        completedTasks = tasks.filter(task => task.isCompleted).length;
+        unfinishedTasks = tasks.filter(task => !task.isCompleted).map(task => ({ task: task.task }));
     }
     
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
