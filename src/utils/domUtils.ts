@@ -15,15 +15,14 @@ export function setElementContent(targetEl: HTMLElement, htmlContent: string): v
         targetEl.removeChild(targetEl.firstChild);
     }
     
-    // 创建临时容器
-    const tempContainer = document.createElement('div');
-    // 注意：这里仍然使用innerHTML，但只在临时容器中使用，内容会被安全地移动到目标元素
-    tempContainer.innerHTML = htmlContent;
+    // 使用DOMParser安全地解析HTML内容
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
     
-    // 将临时容器的内容移动到目标元素
-    while (tempContainer.firstChild) {
-        targetEl.appendChild(tempContainer.firstChild);
-    }
+    // 安全地添加解析后的内容
+    Array.from(doc.body.childNodes).forEach(node => {
+        targetEl.appendChild(document.importNode(node, true));
+    });
 }
 
 /**

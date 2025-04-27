@@ -4,13 +4,8 @@ import { getTranslation, setCurrentLanguage } from '../i18n/i18n';
 import { renderTemplate } from '../utils/templateEngine';
 import { TaskGenerator } from '../taskGenerator';
 import { setTextContentByLines, createIconButton, createTextElement } from '../utils/domUtils';
-
-// 前向声明，避免循环导入
-declare class DailyTaskPlugin {
-    saveData(data: any): Promise<void>;
-    loadData(): Promise<any>;
-    app: App;
-}
+// 导入主插件类型定义
+import DailyTaskPlugin from '../main';
 
 // CSS 相关常量（class名称）
 const SettingsSectionCSS = "daily-task-settings-section";
@@ -60,8 +55,8 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         super(app, plugin);
         this.plugin = plugin;
         
-        // 获取父插件中的设置管理器引用
-        this.settingsManager = (plugin as any).settingsManager;
+        // 获取父插件中的设置管理器引用 - 使用类型断言为DailyTaskPlugin而不是any
+        this.settingsManager = (plugin as DailyTaskPlugin).settingsManager;
         
         // 创建任务生成器
         this.taskGenerator = new TaskGenerator(app, this.settingsManager);
@@ -139,9 +134,11 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 this.dirtySettings = false;
                 
                 // 显示保存成功的视觉反馈
-                saveIndicator.style.opacity = '1';
+                saveIndicator.classList.add('save-indicator-visible');
+                saveIndicator.classList.remove('save-indicator-hidden');
                 setTimeout(() => {
-                    saveIndicator.style.opacity = '0';
+                    saveIndicator.classList.remove('save-indicator-visible');
+                    saveIndicator.classList.add('save-indicator-hidden');
                 }, 1500);
                 
             }, 800);
@@ -170,7 +167,10 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         
         // 更新滑块位置
         const updateSlider = (index: number) => {
-            slider.style.left = `${index * 33.33}%`;
+            // 移除之前的位置类
+            slider.classList.remove('slider-position-0', 'slider-position-1', 'slider-position-2');
+            // 添加新的位置类
+            slider.classList.add(`slider-position-${index}`);
         };
         
         // 设置默认模式为仅工作日生成（WorkDay）
@@ -293,16 +293,21 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         // 添加模板变量说明
         const templateVariablesEl = document.createElement('div');
         templateVariablesEl.classList.add('template-variables');
+
+        // 创建变量内容
         const variablesContent = this.settingsManager.getCurrentLanguage() === 'zh' ?
             '<strong>可用变量：</strong> {{date}} - 日期, {{dateWithIcon}} - 带图标的日期, {{weekday}} - 星期几, {{yearProgress}} - 年进度, {{monthProgress}} - 月进度, {{time}} - 当前时间' :
             '<strong>Available variables:</strong> {{date}} - Date, {{dateWithIcon}} - Date with icon, {{weekday}} - Day of week, {{yearProgress}} - Year progress, {{monthProgress}} - Month progress, {{time}} - Current time';
-        
-        // 使用setElementContent安全地设置HTML内容
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = variablesContent;
-        while (tempDiv.firstChild) {
-            templateVariablesEl.appendChild(tempDiv.firstChild);
-        }
+
+        // 使用DOMParser安全地解析HTML内容
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(variablesContent, 'text/html');
+
+        // 安全地添加解析后的内容
+        Array.from(doc.body.childNodes).forEach(node => {
+            templateVariablesEl.appendChild(document.importNode(node, true));
+        });
+
         containerEl.appendChild(templateVariablesEl);
         
         // 单一模板设置
@@ -311,8 +316,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             .setClass('template-setting');
         
         const templateContainer = document.createElement('div');
-        templateContainer.classList.add('template-container');
-        templateContainer.style.width = '100%';
+        templateContainer.classList.add('template-container', 'full-width-container');
         
         // 获取当前模板内容
         const currentTemplate = this.settingsManager.hasCustomTemplate() ? 
@@ -517,12 +521,12 @@ export class DailyTaskSettingTab extends PluginSettingTab {
     private togglePreview(previewEl: HTMLElement | null): void {
         if (!previewEl) return;
         
-        if (previewEl.style.display === 'none') {
-            previewEl.style.display = 'block';
-            previewEl.classList.add('visible');
+        if (previewEl.classList.contains('hidden-element')) {
+            previewEl.classList.remove('hidden-element');
+            previewEl.classList.add('visible-element', 'visible');
         } else {
-            previewEl.style.display = 'none';
-            previewEl.classList.remove('visible');
+            previewEl.classList.add('hidden-element');
+            previewEl.classList.remove('visible-element', 'visible');
         }
     }
 }
@@ -566,14 +570,14 @@ export class SettingsManager {
      * 保存设置到数据存储
      */
     async saveSettings(): Promise<void> {
-        await (this.plugin as any).saveData(this.settings);
+        await (this.plugin as DailyTaskPlugin).saveData(this.settings);
     }
 
     /**
      * 加载设置
      */
     async loadSettings(): Promise<void> {
-        const loadedData = await (this.plugin as any).loadData();
+        const loadedData = await (this.plugin as DailyTaskPlugin).loadData();
         if (loadedData) {
             // 合并默认设置和已保存的设置
             this.settings = {
@@ -603,7 +607,9 @@ export class SettingsManager {
         defaultKeys.forEach(key => {
             // 如果当前设置中缺少某个默认设置项，添加默认值
             if (!(key in this.settings)) {
-                (this.settings as any)[key] = (DEFAULT_SETTINGS as any)[key];
+                // 先将对象转换为unknown，再转换为Record<string, unknown>
+                ((this.settings as unknown) as Record<string, unknown>)[key] = 
+                    ((DEFAULT_SETTINGS as unknown) as Record<string, unknown>)[key];
             }
         });
     }

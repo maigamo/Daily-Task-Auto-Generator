@@ -1,7 +1,7 @@
 {
 	"id": "daily-task-auto-generator",
 	"name": "Daily Task Auto Generator",
-	"version": "1.0.2",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Automatically generate daily tasks with custom templates, statistics and multi-language support",
 	"author": "maigamo",

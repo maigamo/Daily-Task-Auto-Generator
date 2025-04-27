@@ -865,4 +865,20 @@ button {
 .success-button {
     background-color: #4CAF50 !important;
     color: white !important;
-} 
+}
+
+/* 滑块位置类 */
+.slider-position-0 { left: 0%; }
+.slider-position-1 { left: 33.33%; }
+.slider-position-2 { left: 66.66%; }
+
+/* 显示/隐藏控制 */
+.hidden-element { display: none; }
+.visible-element { display: block; }
+
+/* 保存指示器状态 */
+.save-indicator-visible { opacity: 1; }
+.save-indicator-hidden { opacity: 0; }
+
+/* 容器宽度 */
+.full-width-container { width: 100%; } 

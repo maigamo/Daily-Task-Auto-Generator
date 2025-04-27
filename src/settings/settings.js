@@ -510,8 +510,26 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         if (!previewEl)
             return;
         const renderedContent = renderTemplate(template);
-        // 使用MarkdownRenderer需要导入相关组件
-        previewEl.innerHTML = renderedContent.replace(/\n/g, '<br>');
+        
+        // 清空预览区域
+        while (previewEl.firstChild) {
+            previewEl.removeChild(previewEl.firstChild);
+        }
+        
+        // 将内容按行分割并安全地添加到目标元素
+        const lines = renderedContent.split('\n');
+        
+        // 为每行创建一个div
+        lines.forEach((line, index) => {
+            const lineEl = document.createElement('div');
+            lineEl.textContent = line;
+            previewEl.appendChild(lineEl);
+            
+            // 如果不是最后一行，添加换行符
+            if (index < lines.length - 1) {
+                previewEl.appendChild(document.createElement('br'));
+            }
+        });
     }
     /**
      * 切换预览的显示/隐藏
