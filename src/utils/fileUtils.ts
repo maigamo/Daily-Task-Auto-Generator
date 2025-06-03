@@ -18,14 +18,14 @@ export async function ensureFolderExists(vault: Vault, path: string): Promise<bo
     try {
         const folderParts = path.split('/').filter(part => part.trim() !== '');
         let currentPath = '';
-
+        
         for (const part of folderParts) {
             if (currentPath) {
                 currentPath += '/' + part;
             } else {
                 currentPath = part;
             }
-
+            
             const normalizedPath = normalizePath(currentPath);
             const folder = vault.getAbstractFileByPath(normalizedPath);
             
@@ -58,7 +58,7 @@ export async function ensureFileExists(vault: Vault, path: string, content: stri
                 return false;
             }
         }
-
+        
         // 检查文件是否存在
         const file = vault.getAbstractFileByPath(normalizedPath);
         
@@ -66,7 +66,7 @@ export async function ensureFileExists(vault: Vault, path: string, content: stri
             // 创建文件并写入内容
             await vault.create(normalizedPath, content);
         }
-        return true;
+                return true;
     } catch (error) {
         return false;
     }
@@ -86,8 +86,8 @@ export async function appendToFile(vault: Vault, path: string, content: string):
         // 确保文件存在
         const fileExists = await ensureFileExists(vault, normalizedPath);
         if (!fileExists) {
-            return false;
-        }
+                return false;
+            }
 
         // 获取文件对象
         const file = vault.getAbstractFileByPath(normalizedPath);
@@ -124,8 +124,8 @@ export async function fileContains(vault: Vault, path: string, content: string):
         // 获取文件对象
         const file = vault.getAbstractFileByPath(normalizedPath);
         if (!(file instanceof TFile)) {
-            return false;
-        }
+                return false;
+            }
 
         // 读取文件内容
         const fileContent = await vault.read(file);
@@ -140,15 +140,37 @@ export async function fileContains(vault: Vault, path: string, content: string):
 /**
  * 根据当前日期生成任务文件路径
  * @param rootDir 根目录
- * @returns 任务文件路径，格式为：rootDir/year/month.md
+ * @returns 任务文件路径，格式为：rootDir/year/monthName.md
  */
 export function getTaskFilePath(rootDir: string): string {
     const now = new Date();
     const year = now.getFullYear();
-    const month = now.getMonth() + 1;
+    const monthIndex = now.getMonth(); // 0-11
     
     const yearDir = year.toString();
-    const monthFile = month.toString().padStart(2, '0') + '.md';
+    
+    // 根据系统语言确定是否使用英文
+    const isEnglish = isEnglishEnvironment();
+    
+    // 使用本地化的月份名称
+    let monthName = '';
+    if (isEnglish) {
+        // 英文月份名称
+        const englishMonths = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        monthName = englishMonths[monthIndex];
+    } else {
+        // 中文月份名称
+        const chineseMonths = [
+            "1月", "2月", "3月", "4月", "5月", "6月",
+            "7月", "8月", "9月", "10月", "11月", "12月"
+        ];
+        monthName = chineseMonths[monthIndex];
+    }
+    
+    const monthFile = `${monthName}.md`;
     
     return normalizePath(`${rootDir}/${yearDir}/${monthFile}`);
 }
@@ -190,10 +212,32 @@ export function getYesterdayTaskFilePath(rootDir: string): string {
     yesterday.setDate(yesterday.getDate() - 1);
     
     const year = yesterday.getFullYear();
-    const month = yesterday.getMonth() + 1;
+    const monthIndex = yesterday.getMonth(); // 0-11
     
     const yearDir = year.toString();
-    const monthFile = month.toString().padStart(2, '0') + '.md';
+    
+    // 根据系统语言确定是否使用英文
+    const isEnglish = isEnglishEnvironment();
+    
+    // 使用本地化的月份名称
+    let monthName = '';
+    if (isEnglish) {
+        // 英文月份名称
+        const englishMonths = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        monthName = englishMonths[monthIndex];
+    } else {
+        // 中文月份名称
+        const chineseMonths = [
+            "1月", "2月", "3月", "4月", "5月", "6月",
+            "7月", "8月", "9月", "10月", "11月", "12月"
+        ];
+        monthName = chineseMonths[monthIndex];
+    }
+    
+    const monthFile = `${monthName}.md`;
     
     return normalizePath(`${rootDir}/${yearDir}/${monthFile}`);
 }
@@ -258,7 +302,7 @@ export async function extractTasksForDate(vault: Vault, filePath: string, date: 
         if (!(file instanceof TFile)) {
             return null;
         }
-        
+
         // 读取任务文件内容
         const fileContent = await vault.read(file);
         
@@ -315,7 +359,7 @@ export function analyzeTaskCompletion(taskContent: string): {
         const taskMatch = line.match(/^\s*-\s*\[([ xX])\]\s*(.+)$/);
         if (taskMatch) {
             totalTasks++;
-            
+    
             // 检查任务是否已完成
             if (taskMatch[1].toLowerCase() === 'x') {
                 completedTasks++;
@@ -348,7 +392,7 @@ export async function yesterdayStatisticsExists(vault: Vault, filePath: string, 
         if (!(file instanceof TFile)) {
             return false;
         }
-        
+
         // 读取今日任务文件内容
         const fileContent = await vault.read(file);
         

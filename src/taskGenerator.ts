@@ -191,9 +191,6 @@ export class TaskGenerator {
      */
     async addTaskManually(): Promise<boolean> {
         try {
-            // 显示开始生成的通知
-            this.showWarningNotice(`⏳ ${getTranslation('notification.generating')}`);
-            
             // 调用任务生成逻辑，打开文件
             return await this.generateDailyTask(true);
         } catch (error) {
