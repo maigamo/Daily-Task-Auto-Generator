@@ -4,7 +4,11 @@ node_modules/
 # build artifacts
 main.js
 main.js.map
+dist/
 data.json
+# 忽略所有由TypeScript编译生成的JS文件
+src/**/*.js
+src/**/*.js.map
 
 # editor settings
 .vscode/

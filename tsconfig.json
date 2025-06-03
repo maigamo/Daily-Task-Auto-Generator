@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "strictNullChecks": true,
     "skipLibCheck": true,
+    "outDir": "dist",
     "lib": [
       "DOM",
       "ES5",

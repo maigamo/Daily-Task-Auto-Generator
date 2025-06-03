@@ -36,6 +36,9 @@ export type TranslationKey =
     | 'settings.preview'
     | 'template.dateWithIcon'
     
+    // 命令
+    | 'commands.addDailyTask'
+    
     // 通知
     | 'notification.taskAdded'
     | 'notification.taskExists'
@@ -164,6 +167,9 @@ const translationsZH: Record<TranslationKey, string> = {
     'settings.basicSettings': '基本设置',
     'settings.templateSettings': '模板设置',
     
+    // 命令
+    'commands.addDailyTask': '手动添加今日任务',
+    
     // 通知
     'notification.taskAdded': '今日任务已添加',
     'notification.taskExists': '今日任务已存在',
@@ -205,37 +211,40 @@ const translationsZH: Record<TranslationKey, string> = {
 // 英文翻译
 const translationsEN: Record<TranslationKey, string> = {
     // 设置页面
-    'settings.title': 'Daily Task Auto Generator Settings',
-    'settings.rootDir': '📁 Task Directory',
+    'settings.title': 'Daily Task Auto Generator',
+    'settings.rootDir': '📁 Task directory',
     'settings.rootDir.desc': 'Specify the root directory for storing task files, tasks will be stored in "Year/Month.md" format',
     'settings.rootDir.saved': '✓ Directory saved',
     'settings.save': '💾 Save',
-    'settings.autoGenerate': '🔄 Auto Generate Mode',
+    'settings.autoGenerate': '🔄 Auto generate mode',
     'settings.autoGenerate.desc': 'Choose when to automatically generate daily tasks',
     'settings.mode.none': '❌ Off',
     'settings.mode.daily': '📆 Daily',
-    'settings.mode.workday': '💼 Workdays Only',
-    'settings.language': '🔤 Interface Language',
+    'settings.mode.workday': '💼 Workdays only',
+    'settings.language': '🔤 Interface language',
     'settings.language.desc': 'Select the language for the plugin interface',
-    'settings.language.auto': '🔍 Auto Detect',
+    'settings.language.auto': '🔍 Auto detect',
     'settings.language.zh': '🇨🇳 Chinese',
     'settings.language.en': '🇬🇧 English',
-    'settings.animations': '✨ Animation Effects',
+    'settings.animations': '✨ Animation effects',
     'settings.animations.desc': 'Enable interface animation effects',
-    'settings.template': '📝 Task Template',
-    'settings.template.zh': '🇨🇳 Chinese Template',
-    'settings.template.en': '🇬🇧 English Template',
-    'settings.template.preview': '👁️ Show Preview',
-    'settings.template.hide': '👁️‍🗨️ Hide Preview',
-    'settings.resetToDefault': '🔄 Reset to Default',
-    'settings.addTaskButton': '➕ Add Today\'s Task Manually',
-    'settings.notificationDuration': '⏱️ Notification Duration',
+    'settings.template': '📝 Template',
+    'settings.template.zh': '🇨🇳 Chinese template',
+    'settings.template.en': '🇬🇧 English template',
+    'settings.template.preview': '👁️ Show preview',
+    'settings.template.hide': '👁️‍🗨️ Hide preview',
+    'settings.resetToDefault': '🔄 Reset to default',
+    'settings.addTaskButton': '➕ Add today\'s task manually',
+    'settings.notificationDuration': '⏱️ Notification duration',
     'settings.notificationDuration.desc': 'Duration to show success/failure notifications (milliseconds)',
-    'settings.preview': 'Preview Template',
-    'settings.resetDefault': 'Reset to Default',
+    'settings.preview': 'Preview template',
+    'settings.resetDefault': 'Reset to default',
     'template.dateWithIcon': 'Current date with icon',
-    'settings.basicSettings': 'Basic Settings',
-    'settings.templateSettings': 'Template Settings',
+    'settings.basicSettings': 'Basic',
+    'settings.templateSettings': 'Templates',
+    
+    // 命令
+    'commands.addDailyTask': 'Add today\'s task manually',
     
     // 通知
     'notification.taskAdded': 'Today\'s task has been added',

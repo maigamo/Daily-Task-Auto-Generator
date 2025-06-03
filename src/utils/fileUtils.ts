@@ -140,16 +140,17 @@ export async function fileContains(vault: Vault, path: string, content: string):
 /**
  * 根据当前日期生成任务文件路径
  * @param rootDir 根目录
- * @returns 任务文件路径
+ * @returns 任务文件路径，格式为：rootDir/year/month.md
  */
 export function getTaskFilePath(rootDir: string): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
-    const day = now.getDate();
     
-    const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    return normalizePath(`${rootDir}/${formattedDate}.md`);
+    const yearDir = year.toString();
+    const monthFile = month.toString().padStart(2, '0') + '.md';
+    
+    return normalizePath(`${rootDir}/${yearDir}/${monthFile}`);
 }
 
 /**
@@ -185,8 +186,16 @@ export function getYesterdayDate(): string {
  * @returns 前一天任务文件的路径
  */
 export function getYesterdayTaskFilePath(rootDir: string): string {
-    const yesterdayDate = getYesterdayDate();
-    return normalizePath(`${rootDir}/${yesterdayDate}.md`);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const year = yesterday.getFullYear();
+    const month = yesterday.getMonth() + 1;
+    
+    const yearDir = year.toString();
+    const monthFile = month.toString().padStart(2, '0') + '.md';
+    
+    return normalizePath(`${rootDir}/${yearDir}/${monthFile}`);
 }
 
 /**

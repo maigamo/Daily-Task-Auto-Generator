@@ -31,13 +31,14 @@ export class TaskGenerator {
             const settings = this.settingsManager.getSettings();
             const rootDir = settings.rootDir.trim() || 'DailyTasks'; // 使用默认目录
             
-            // 获取任务文件路径
+            // 获取任务文件路径 (格式：rootDir/year/month.md)
             const filePath = getTaskFilePath(rootDir);
             
-            // 解析年份和月份
+            // 解析年份和月份 - 适应新的路径格式
             const pathParts = filePath.split('/');
+            // 现在pathParts数组格式为 [rootDir, year, month.md]
             const year = pathParts.length > 1 ? pathParts[1] : '';
-            const monthName = pathParts.length > 2 ? pathParts[2].replace('.md', '') : '';
+            const monthFile = pathParts.length > 2 ? pathParts[2] : '';
             const yearFolder = `${rootDir}/${year}`;
             
             // 确保根目录存在

@@ -1,7 +1,7 @@
 import { Plugin, addIcon } from 'obsidian';
 import { AutoGenerateMode } from './models/settings';
 import { DailyTaskSettingTab, SettingsManager } from './settings/settings';
-import { setCurrentLanguage } from './i18n/i18n';
+import { getTranslation, setCurrentLanguage } from './i18n/i18n';
 import { isWorkday } from './utils/dateUtils';
 import { TaskGenerator } from './taskGenerator';
 import { DAILY_TASK_ICON } from './ui/icons';
@@ -39,7 +39,7 @@ export default class DailyTaskPlugin extends Plugin {
         // 添加手动生成任务命令
         this.addCommand({
             id: 'add-daily-task',
-            name: '手动添加今日任务',
+            name: getTranslation('commands.addDailyTask'),
             callback: async () => {
                 await this.taskGenerator.addTaskManually();
             }

@@ -113,17 +113,17 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         saveIndicator.appendChild(saveSuccessIcon);
 
         // 记录自动保存定时器
-        let autoSaveTimer: NodeJS.Timeout | null = null;
+        let autoSaveTimer: number | null = null;
         
         // 自动保存方法
         this.autoSaveRootDir = async (value: string) => {
             // 清除之前的定时器
             if (autoSaveTimer !== null) {
-                clearTimeout(autoSaveTimer);
+                window.clearTimeout(autoSaveTimer);
             }
             
             // 设置新的定时器，延迟800ms保存（在用户停止输入后）
-            autoSaveTimer = setTimeout(async () => {
+            autoSaveTimer = window.setTimeout(async () => {
                 let pathToSave = value.trim();
                 if (pathToSave === '') {
                     pathToSave = 'DailyTasks'; // 默认存放目录
@@ -136,7 +136,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 // 显示保存成功的视觉反馈
                 saveIndicator.classList.add('save-indicator-visible');
                 saveIndicator.classList.remove('save-indicator-hidden');
-                setTimeout(() => {
+                window.setTimeout(() => {
                     saveIndicator.classList.remove('save-indicator-visible');
                     saveIndicator.classList.add('save-indicator-hidden');
                 }, 1500);
@@ -211,6 +211,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         });
         
         // 语言设置
+        // TODO: 应该使用Obsidian API的app.i18n.locale获取系统语言设置
+        // 需要在manifest.json中设置minAppVersion: "1.8.0"或更高
+        // 可以移除此设置并修改SettingsManager.getCurrentLanguage()方法
         new Setting(containerEl)
             .setName(getTranslation('settings.language'))
             .setDesc(getTranslation('settings.language.desc'))
@@ -277,10 +280,10 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 return toggleEl;
             });
         
-        // 模板设置
-        const templateHeader = document.createElement('h3');
-        templateHeader.textContent = getTranslation('settings.template');
-        containerEl.appendChild(templateHeader);
+        // 模板设置 - 使用常规方式创建标题
+        // TODO: 如果Obsidian API支持，应该使用Setting.setHeading()方法创建标题
+        // 例如: new Setting(containerEl).setName(getTranslation('settings.template')).setHeading();
+        containerEl.createEl('h3', { text: getTranslation('settings.template') });
         
         // 添加模板使用逻辑说明
         const templateDescription = document.createElement('p');
@@ -417,7 +420,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             
             // 显示成功提示动画
             resetBtn.buttonEl.classList.add('success-button');
-            setTimeout(() => {
+            window.setTimeout(() => {
                 resetBtn.buttonEl.classList.remove('success-button');
             }, 1000);
         });
@@ -488,7 +491,7 @@ export class DailyTaskSettingTab extends PluginSettingTab {
                 new Notice(`添加任务失败: ${e.message || e}`);
             } finally {
                 // 移除loading状态
-                setTimeout(() => {
+                window.setTimeout(() => {
                     if (this.addTaskButton && this.addTaskButton.buttonEl) {
                         this.addTaskButton.buttonEl.classList.remove('loading');
                     }
@@ -664,6 +667,8 @@ export class SettingsManager {
      * 获取当前语言设置
      */
     getCurrentLanguage(): string {
+        // TODO: 应该使用Obsidian API的app.i18n.locale获取系统语言设置
+        // 例如：return this.plugin.app.i18n.locale.startsWith('zh') ? 'zh' : 'en';
         if (this.settings.language === Language.AUTO) {
             // 自动检测系统语言
             const systemLanguage = window.navigator.language.toLowerCase();
