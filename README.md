@@ -8,9 +8,7 @@
     </p>
 </div>
 
-<p align="center">
-  <img src="Daily Task Auto Generator.gif" alt="alt text">
-</p>
+![alt text](<image/Daily Task Auto Generator-windows.gif>)
 
 
 ![alt text](<image/Daily Task Auto Generator-Android.gif>)
