@@ -1,8 +1,6 @@
 # 📅 Daily Task Auto Generator
 
 <div align="center">
-    <img src="image/logo.png" alt="Daily Task Auto Generator Logo" width="200">
-    <br />
     <p>
         <a href="#english">🇺🇸 English</a> | 
         <a href="#chinese">🇨🇳 中文</a> | 
@@ -10,10 +8,10 @@
     </p>
 </div>
 
----
+
 
 <a name="english"></a>
-## 🇺🇸 English
+## English
 
 ### ✨ Introduction
 
@@ -82,7 +80,7 @@ Contributions are welcome! Feel free to submit issues or pull requests on GitHub
 ---
 
 <a name="chinese"></a>
-## 🇨🇳 中文
+## 中文
 
 ### ✨ 介绍
 
@@ -142,7 +140,7 @@ Contributions are welcome! Feel free to submit issues or pull requests on GitHub
 ---
 
 <a name="japanese"></a>
-## 🇯🇵 日本語
+## 日本語
 
 ### ✨ 紹介
 
