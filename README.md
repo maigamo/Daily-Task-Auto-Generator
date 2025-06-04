@@ -12,6 +12,9 @@
   <img src="Daily Task Auto Generator.gif" alt="alt text">
 </p>
 
+
+![alt text](<image/Daily Task Auto Generator-Android.gif>)
+
 Install: [Daily Task Auto Generator plugin](https://obsidian.md/plugins?search=Daily+Task+Auto+Generator)
 
 Quickly install to Obsidian： [Daily Task Auto Generator plugin](obsidian://show-plugin?id=daily-task-auto-generator)
