@@ -8,14 +8,16 @@
     </p>
 </div>
 
+#### Automatically generate daily tasks on windows.
+
 ![alt text](<image/Daily Task Auto Generator-windows.gif>)
 
 
+#### Automatically generate daily tasks on Android.
 ![alt text](<image/Daily Task Auto Generator-Android.gif>)
 
 Install: [Daily Task Auto Generator plugin](https://obsidian.md/plugins?search=Daily+Task+Auto+Generator)
 
-Quickly install to Obsidian： [Daily Task Auto Generator plugin](obsidian://show-plugin?id=daily-task-auto-generator)
 
 <a name="english"></a>
 ## English
