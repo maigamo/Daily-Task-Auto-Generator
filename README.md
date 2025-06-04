@@ -11,7 +11,7 @@
 
 
 <a name="english"></a>
-## English
+## 🇺🇸 English
 
 ### ✨ Introduction
 
@@ -80,7 +80,7 @@ Contributions are welcome! Feel free to submit issues or pull requests on GitHub
 ---
 
 <a name="chinese"></a>
-## 中文
+## 🇨🇳 中文
 
 ### ✨ 介绍
 
@@ -140,7 +140,7 @@ Contributions are welcome! Feel free to submit issues or pull requests on GitHub
 ---
 
 <a name="japanese"></a>
-## 日本語
+## 🇯🇵 日本語
 
 ### ✨ 紹介
 
