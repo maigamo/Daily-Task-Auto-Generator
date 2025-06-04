@@ -8,8 +8,9 @@
     </p>
 </div>
 
-![alt text](<Daily Task Auto Generator.gif>)
-
+<p align="center">
+  <img src="Daily Task Auto Generator.gif" alt="alt text">
+</p>
 
 <a name="english"></a>
 ## 🇺🇸 English
