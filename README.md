@@ -19,6 +19,7 @@
 Install: [Daily Task Auto Generator plugin](https://obsidian.md/plugins?search=Daily+Task+Auto+Generator)
 
 
+
 <a name="english"></a>
 ## English
 
