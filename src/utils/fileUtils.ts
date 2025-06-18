@@ -98,8 +98,8 @@ export async function appendToFile(vault: Vault, path: string, content: string):
         // 读取文件当前内容
         const currentContent = await vault.read(file);
         
-        // 追加新内容
-        const newContent = currentContent + '\n' + content;
+        // 若文件存在，则追加新内容，否则直接写入
+        const newContent = currentContent ? currentContent + '\n' + content : content;
         
         // 将合并后的内容写回文件
         await vault.modify(file, newContent);
