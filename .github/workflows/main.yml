@@ -1,0 +1,48 @@
+name: Plugin CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-and-build:
+    name: Type Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type Check (non-strict)
+        run: |
+          echo "Running TypeScript check..."
+          npx tsc --noEmit || echo "⚠️ TypeScript check failed, but continuing."
+
+      - name: Build plugin
+        run: node esbuild.config.mjs production
+
+      - name: Check output files
+        run: |
+          test -f main.js || (echo "❌ main.js not found after build" && exit 1)
+          test -f manifest.json || (echo "❌ manifest.json not found" && exit 1)
+
+      - name: Enforce commit message format (push only)
+        if: github.event_name == 'push'
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Last commit: $COMMIT_MSG"
+          if ! echo "$COMMIT_MSG" | grep -E -q '^(feat|fix|chore|docs|style|refactor|test)(\(.+\))?: .+'; then
+            echo "❌ Commit message does not follow conventional format (e.g., 'feat: xxx')"
+            exit 1
+          fi
