@@ -1,5 +1,5 @@
 格式：
-<type>: 简短描述
+<type>: 简短的描述
 
 example：
 feat: 添加新功能
