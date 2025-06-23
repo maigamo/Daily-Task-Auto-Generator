@@ -132,19 +132,6 @@
     width: 20% !important;
 }
 
-/* 自定义通知样式 */
-.daily-task-success-notice {
-    background-color: rgba(0, 255, 127, 0.2) !important;
-}
-
-.daily-task-warning-notice {
-    background-color: rgba(255, 165, 0, 0.2) !important;
-}
-
-.daily-task-error-notice {
-    background-color: rgba(255, 69, 0, 0.2) !important;
-}
-
 /* 输入框样式 */
 .daily-task-input {
     width: 100%;
@@ -180,4 +167,62 @@
     display: flex;
     width: 100%;
     position: relative;
+}
+
+/* 通知样式 - 使用与Obsidian一致的原生样式 */
+.notice-success, .notice-warning, .notice-error {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.3s ease forwards;
+}
+
+/* 成功通知 - 绿色 */
+.notice-success {
+    background-color: var(--background-modifier-success);
+    color: var(--text-normal);
+    border-left: 3px solid var(--color-green);
+}
+
+/* 警告通知 - 黄色 */
+.notice-warning {
+    background-color: var(--background-modifier-warning);
+    color: var(--text-normal);
+    border-left: 3px solid var(--color-yellow);
+}
+
+/* 错误通知 - 红色 */
+.notice-error {
+    background-color: var(--background-modifier-error);
+    color: var(--text-normal);
+    border-left: 3px solid var(--color-red);
+}
+
+/* 通知动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 移动设备上的通知样式优化 */
+@media screen and (max-width: 768px) {
+    .notice-success, .notice-warning, .notice-error {
+        width: calc(100% - 20px);
+        max-width: 100%;
+        margin: 8px auto;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+    }
 } 
