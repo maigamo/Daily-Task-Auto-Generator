@@ -1,6 +1,6 @@
 格式：
 <type>(scope): 简短描述
 
-示例：
+example：
 feat: 添加新功能
 fix(tasks): 修复任务时间显示
