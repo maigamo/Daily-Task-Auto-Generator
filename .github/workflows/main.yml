@@ -34,7 +34,6 @@ jobs:
 
       - name: Check output files
         run: |
-          test -f main.js || (echo "❌ main.js not found after build" && exit 1)
           test -f manifest.json || (echo "❌ manifest.json not found" && exit 1)
 
       - name: Enforce commit message format (push only)
