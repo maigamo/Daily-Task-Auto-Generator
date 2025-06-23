@@ -72,7 +72,8 @@ jobs:
             echo "Merge commit detected, skipping commit message format check."
             exit 0
           fi
-          if ! echo "$COMMIT_MSG" | grep -E -q '^(feat|fix|chore|docs|style|refactor|test)(\(.+\))?: .+'; then
+          if ! echo "$COMMIT_MSG" | grep -E -q '^(feat|fix|chore|docs|style|refactor|test)(\(.+\))?:\s*.+'
+          then
             echo "❌ Commit message does not follow conventional format (e.g., 'feat: xxx')"
             exit 1
           fi
