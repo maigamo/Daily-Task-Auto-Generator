@@ -1,9 +1,10 @@
 import { App, Notice, TAbstractFile, TFile, Vault } from "obsidian";
 import { getTranslation } from "./i18n/i18n";
 import { SettingsManager } from "./settings/settings";
-import { appendToFile, ensureFileExists, ensureFolderExists, getTaskFilePath, todayTaskExists, fileContains, getYesterdayDate, getYesterdayTaskFilePath, extractTasksForDate, analyzeTaskCompletion, yesterdayStatisticsExists, generateStatisticsContent } from "./utils/fileUtils";
+import { appendToFile, ensureFileExists, ensureFolderExists, getTaskFilePath, todayTaskExists, fileContains, getYesterdayDate, getYesterdayTaskFilePath, extractTasksForDate, analyzeTaskCompletion, yesterdayStatisticsExists, generateStatisticsContent, getTaskFilePathByMode, getDailyTaskFilePath, getDailyTaskFolderPaths, dailyTaskFileExists, createDailyTaskFile } from "./utils/fileUtils";
 import { renderTemplate } from "./utils/templateEngine";
 import { getCurrentDate } from "./utils/dateUtils";
+import { FileGenerationMode } from "./models/settings";
 
 /**
  * 任务生成器
@@ -21,12 +22,28 @@ export class TaskGenerator {
     }
 
     /**
-     * 生成每日任务
+     * 生成每日任务（主入口方法）
      * @param openFile 是否打开文件
      * @param quietMode 静默模式，减少日志输出
      * @returns 成功或失败
      */
     async generateDailyTask(openFile: boolean = true, quietMode: boolean = false): Promise<boolean> {
+        const settings = this.settingsManager.getSettings();
+        
+        if (settings.fileGenerationMode === FileGenerationMode.MONTHLY) {
+            return await this.generateMonthlyTask(openFile, quietMode);
+        } else {
+            return await this.generateDailyTaskFile(openFile, quietMode);
+        }
+    }
+
+    /**
+     * 生成月度任务文件（原有逻辑）
+     * @param openFile 是否打开文件
+     * @param quietMode 静默模式，减少日志输出
+     * @returns 成功或失败
+     */
+    private async generateMonthlyTask(openFile: boolean = true, quietMode: boolean = false): Promise<boolean> {
         try {
             const settings = this.settingsManager.getSettings();
             const rootDir = settings.rootDir.trim() || 'DailyTasks'; // 使用默认目录
@@ -134,6 +151,107 @@ export class TaskGenerator {
                 }
             } else {
                 throw new Error(`无法向文件追加内容: ${filePath}`);
+            }
+            
+            return success;
+        } catch (error) {
+            // 显示错误通知
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            this.showErrorNotice(`${getTranslation('notification.error')} ${errorMsg}`);
+            
+            return false;
+        }
+    }
+
+    /**
+     * 生成日度任务文件（新增逻辑）
+     * @param openFile 是否打开文件
+     * @param quietMode 静默模式，减少日志输出
+     * @returns 成功或失败
+     */
+    private async generateDailyTaskFile(openFile: boolean = true, quietMode: boolean = false): Promise<boolean> {
+        try {
+            const settings = this.settingsManager.getSettings();
+            const rootDir = settings.rootDir.trim() || 'DailyTasks';
+            const prefix = settings.dailyFilePrefix || '';
+            
+            // 获取日度任务文件路径
+            const filePath = getDailyTaskFilePath(rootDir, prefix);
+            
+            // 检查文件是否已存在
+            const fileExists = await dailyTaskFileExists(this.vault, rootDir, prefix);
+            
+            if (fileExists) {
+                // 如果需要打开文件
+                if (openFile) {
+                    // 显示提示并打开文件
+                    this.showWarningNotice(`📌 ${getTranslation('notification.dailyFileExists')}`);
+                    const file = this.vault.getAbstractFileByPath(filePath);
+                    if (file && file instanceof TFile) {
+                        const leaf = this.app.workspace.getLeaf();
+                        await leaf.openFile(file);
+                    }
+                }
+                
+                return true; // 文件已存在，视为成功
+            }
+            
+            // 获取年份和月份文件夹路径
+            const { yearPath, monthPath } = getDailyTaskFolderPaths(rootDir);
+            
+            // 确保根目录存在
+            const rootCreated = await ensureFolderExists(this.vault, rootDir);
+            if (!rootCreated) {
+                throw new Error(`无法访问根目录: ${rootDir}，可能是存在同名文件或权限问题`);
+            }
+            
+            // 确保年份目录存在
+            const yearCreated = await ensureFolderExists(this.vault, yearPath);
+            if (!yearCreated) {
+                throw new Error(`无法访问年份目录: ${yearPath}，可能是存在同名文件或权限问题`);
+            }
+            
+            // 确保月份目录存在
+            const monthCreated = await ensureFolderExists(this.vault, monthPath);
+            if (!monthCreated) {
+                throw new Error(`无法访问月份目录: ${monthPath}，可能是存在同名文件或权限问题`);
+            }
+            
+            // 获取任务模板内容
+            let template = '';
+            if (this.settingsManager.hasCustomTemplate()) {
+                // 使用用户自定义模板
+                template = this.settingsManager.getSettings().customTemplate;
+            } else {
+                // 使用语言相关的默认模板
+                template = this.settingsManager.getTemplateByLanguage();
+            }
+            
+            // 渲染模板
+            const renderedContent = renderTemplate(template);
+            
+            // 创建日度任务文件（不追加，直接创建完整文件）
+            const success = await createDailyTaskFile(this.vault, filePath, renderedContent);
+            
+            if (success) {
+                // 如果需要打开文件
+                if (openFile) {
+                    // 打开创建的文件
+                    const file = this.vault.getAbstractFileByPath(filePath);
+                    if (file && file instanceof TFile) {
+                        const leaf = this.app.workspace.getLeaf();
+                        await leaf.openFile(file);
+                        
+                        // 延迟一下再显示通知，确保文件已经打开
+                        setTimeout(() => {
+                            this.showSuccessNotice(`✨ ${getTranslation('notification.taskAdded')}`);
+                        }, 300);
+                    } else {
+                        throw new Error(`文件创建成功但无法打开: ${filePath}`);
+                    }
+                }
+            } else {
+                throw new Error(`无法创建日度任务文件: ${filePath}`);
             }
             
             return success;

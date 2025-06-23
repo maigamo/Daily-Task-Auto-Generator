@@ -8,6 +8,14 @@ export enum AutoGenerateMode {
 }
 
 /**
+ * 文件生成模式枚举
+ */
+export enum FileGenerationMode {
+    MONTHLY = 'monthly',    // 月度文件模式（默认）
+    DAILY = 'daily'         // 日度文件模式
+}
+
+/**
  * 设置界面语言
  */
 export enum Language {
@@ -24,6 +32,10 @@ export interface DailyTaskSettings {
     rootDir: string;               // 任务文件存放的根目录
     autoGenerateMode: AutoGenerateMode; // 自动生成模式
     language: string;            // 界面语言
+
+    // 文件生成模式配置
+    fileGenerationMode: FileGenerationMode; // 文件生成模式
+    dailyFilePrefix: string;                // 日度文件前缀（仅日度模式使用）
 
     // 模板配置
     templateZh: string;            // 中文任务模板
@@ -87,6 +99,8 @@ export const DEFAULT_SETTINGS: DailyTaskSettings = {
     rootDir: 'DailyTasks',
     autoGenerateMode: AutoGenerateMode.WORKDAY,
     language: Language.AUTO,
+    fileGenerationMode: FileGenerationMode.MONTHLY, // 默认为月度文件模式
+    dailyFilePrefix: '', // 默认无前缀
     templateZh: DEFAULT_TEMPLATE_ZH,
     templateEn: DEFAULT_TEMPLATE_EN,
     customTemplate: '', // 默认为空，表示使用语言相关的默认模板

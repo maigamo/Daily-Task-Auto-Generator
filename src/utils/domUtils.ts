@@ -36,20 +36,21 @@ export function setTextContentByLines(targetEl: HTMLElement, textContent: string
         targetEl.removeChild(targetEl.firstChild);
     }
     
-    // 将内容按行分割
-    const lines = textContent.split('\n');
+    // 创建预格式化的div来保持原始格式
+    const preEl = document.createElement('div');
+    preEl.style.whiteSpace = 'pre-wrap';
+    preEl.style.wordWrap = 'break-word';
+    preEl.style.textAlign = 'left';
+    preEl.style.margin = '0';
+    preEl.style.padding = '0';
+    preEl.style.fontFamily = 'inherit';
+    preEl.style.lineHeight = 'inherit';
     
-    // 为每行创建一个div
-    lines.forEach((line, index) => {
-        const lineEl = document.createElement('div');
-        lineEl.textContent = line;
-        targetEl.appendChild(lineEl);
-        
-        // 如果不是最后一行，添加换行符
-        if (index < lines.length - 1) {
-            targetEl.appendChild(document.createElement('br'));
-        }
-    });
+    // 直接设置文本内容，保持原始格式
+    preEl.textContent = textContent;
+    
+    // 添加到目标元素
+    targetEl.appendChild(preEl);
 }
 
 /**

@@ -16,6 +16,16 @@ export type TranslationKey =
     | 'settings.mode.none'
     | 'settings.mode.daily'
     | 'settings.mode.workday'
+    
+    // 文件生成模式相关
+    | 'settings.fileGenerationMode'
+    | 'settings.fileGenerationMode.desc'
+    | 'settings.mode.monthly'
+    | 'settings.mode.dailyFile'
+    | 'settings.dailyFilePrefix'
+    | 'settings.dailyFilePrefix.desc'
+    | 'notification.dailyFileExists'
+    
     | 'settings.language'
     | 'settings.language.desc'
     | 'settings.language.auto'
@@ -145,6 +155,16 @@ const translationsZH: Record<TranslationKey, string> = {
     'settings.mode.none': '❌ 关闭',
     'settings.mode.daily': '📆 每天',
     'settings.mode.workday': '💼 仅工作日',
+    
+    // 文件生成模式相关
+    'settings.fileGenerationMode': '📄 文件生成模式',
+    'settings.fileGenerationMode.desc': '选择任务文件的生成方式',
+    'settings.mode.monthly': '📅 月度文件',
+    'settings.mode.dailyFile': '📆 日度文件',
+    'settings.dailyFilePrefix': '🏷️ 文件名前缀',
+    'settings.dailyFilePrefix.desc': '日度文件模式下的文件名前缀（可选）',
+    'notification.dailyFileExists': '今日任务文件已存在',
+    
     'settings.language': '🔤 界面语言',
     'settings.language.desc': '选择插件界面显示的语言',
     'settings.language.auto': '🔍 自动检测',
@@ -221,6 +241,16 @@ const translationsEN: Record<TranslationKey, string> = {
     'settings.mode.none': '❌ Off',
     'settings.mode.daily': '📆 Daily',
     'settings.mode.workday': '💼 Workdays only',
+    
+    // 文件生成模式相关
+    'settings.fileGenerationMode': '📄 File Generation Mode',
+    'settings.fileGenerationMode.desc': 'Choose how task files are generated',
+    'settings.mode.monthly': '📅 Monthly Files',
+    'settings.mode.dailyFile': '📆 Daily Files',
+    'settings.dailyFilePrefix': '🏷️ File Name Prefix',
+    'settings.dailyFilePrefix.desc': 'Optional prefix for daily file names',
+    'notification.dailyFileExists': 'Today\'s task file already exists',
+    
     'settings.language': '🔤 Interface language',
     'settings.language.desc': 'Select the language for the plugin interface',
     'settings.language.auto': '🔍 Auto detect',

@@ -1,5 +1,5 @@
 import { App, ButtonComponent, DropdownComponent, Notice, Plugin, PluginSettingTab, Setting, TextAreaComponent, TextComponent, ToggleComponent } from 'obsidian';
-import { AutoGenerateMode, DEFAULT_SETTINGS, DEFAULT_TEMPLATE_EN, DEFAULT_TEMPLATE_ZH, DailyTaskSettings, Language } from '../models/settings';
+import { AutoGenerateMode, DEFAULT_SETTINGS, DEFAULT_TEMPLATE_EN, DEFAULT_TEMPLATE_ZH, DailyTaskSettings, Language, FileGenerationMode } from '../models/settings';
 import { getTranslation, setCurrentLanguage } from '../i18n/i18n';
 import { renderTemplate } from '../utils/templateEngine';
 import { TaskGenerator } from '../taskGenerator';
@@ -45,11 +45,18 @@ export class DailyTaskSettingTab extends PluginSettingTab {
     // 目录输入框
     rootDirInput: TextComponent | null = null;
     
+    // 日度文件前缀输入框
+    dailyFilePrefixInput: TextComponent | null = null;
+    dailyFilePrefixSetting: HTMLElement | null = null;
+    
     // 标记设置是否已修改但未保存
     dirtySettings: boolean = false;
     
     // 自动保存目录的方法
     autoSaveRootDir: (value: string) => Promise<void>;
+
+    // 自动保存日度文件前缀的方法
+    autoSaveDailyFilePrefix: (value: string) => Promise<void>;
 
     constructor(app: App, plugin: Plugin) {
         super(app, plugin);
@@ -209,6 +216,141 @@ export class DailyTaskSettingTab extends PluginSettingTab {
             
             toggleContainer.appendChild(option);
         });
+        
+        // 文件生成模式设置
+        const fileGenSetting = new Setting(containerEl)
+            .setName(getTranslation('settings.fileGenerationMode'))
+            .setDesc(getTranslation('settings.fileGenerationMode.desc'));
+            
+        // 创建文件生成模式选择器（二选滑块）
+        const fileGenToggleContainer = document.createElement('div');
+        fileGenToggleContainer.classList.add('mode-toggle-container');
+        fileGenSetting.controlEl.appendChild(fileGenToggleContainer);
+        
+        const fileGenModes = [
+            { value: FileGenerationMode.MONTHLY, label: getTranslation('settings.mode.monthly') },
+            { value: FileGenerationMode.DAILY, label: getTranslation('settings.mode.dailyFile') }
+        ];
+        
+        // 文件生成模式滑块指示器
+        const fileGenSlider = document.createElement('div');
+        fileGenSlider.classList.add('mode-toggle-slider');
+        fileGenToggleContainer.appendChild(fileGenSlider);
+        
+        // 更新文件生成模式滑块位置
+        const updateFileGenSlider = (index: number) => {
+            // 移除之前的位置类（二选滑块）
+            fileGenSlider.classList.remove('slider-position-0', 'slider-position-1');
+            // 添加新的位置类
+            fileGenSlider.classList.add(`slider-position-${index}`);
+        };
+        
+        // 设置当前文件生成模式
+        let currentFileGenModeIndex = fileGenModes.findIndex(mode => mode.value === settings.fileGenerationMode);
+        if (currentFileGenModeIndex === -1) {
+            // 如果没有找到有效的模式，设置为月度模式（默认）
+            currentFileGenModeIndex = 0;
+            this.settingsManager.updateSettings({ fileGenerationMode: FileGenerationMode.MONTHLY });
+        }
+        updateFileGenSlider(currentFileGenModeIndex);
+        
+        // 创建文件生成模式选项
+        fileGenModes.forEach((mode, index) => {
+            const option = document.createElement('div');
+            option.classList.add('mode-toggle-option');
+            option.textContent = mode.label;
+            
+            if (mode.value === settings.fileGenerationMode) {
+                option.classList.add('active');
+            }
+            
+            option.addEventListener('click', async () => {
+                // 更新视觉状态
+                fileGenToggleContainer.querySelectorAll('.mode-toggle-option').forEach(el => {
+                    el.classList.remove('active');
+                });
+                option.classList.add('active');
+                
+                // 更新滑块位置
+                updateFileGenSlider(index);
+                
+                // 保存设置
+                await this.settingsManager.updateSettings({ fileGenerationMode: mode.value });
+                
+                // 更新日度文件前缀设置的显示状态
+                this.updateDailyFilePrefixVisibility(mode.value);
+            });
+            
+            fileGenToggleContainer.appendChild(option);
+        });
+
+        // 日度文件前缀设置
+        const dailyFilePrefixSetting = new Setting(containerEl)
+            .setName(getTranslation('settings.dailyFilePrefix'))
+            .setDesc(getTranslation('settings.dailyFilePrefix.desc'));
+            
+        this.dailyFilePrefixSetting = dailyFilePrefixSetting.controlEl.parentElement;
+        
+        // 创建前缀输入框容器
+        const prefixInputContainer = document.createElement('div');
+        prefixInputContainer.classList.add(InputContainerCSS);
+        dailyFilePrefixSetting.controlEl.appendChild(prefixInputContainer);
+        
+        this.dailyFilePrefixInput = new TextComponent(prefixInputContainer)
+            .setValue(settings.dailyFilePrefix || '')
+            .onChange(async (value) => {
+                // 设置已更改，准备自动保存
+                this.dirtySettings = true;
+                
+                // 启动自动保存定时器
+                this.autoSaveDailyFilePrefix(value);
+            });
+        
+        // 给input元素设置类和placeholder属性
+        if (this.dailyFilePrefixInput && this.dailyFilePrefixInput.inputEl) {
+            this.dailyFilePrefixInput.inputEl.classList.add(InputCSS);
+            this.dailyFilePrefixInput.inputEl.placeholder = getTranslation('settings.dailyFilePrefix.desc');
+        }
+        
+        // 添加前缀自动保存指示器
+        const prefixSaveIndicator = document.createElement('div');
+        prefixSaveIndicator.classList.add(SaveIndicatorCSS);
+        prefixInputContainer.appendChild(prefixSaveIndicator);
+        
+        // 创建前缀保存成功图标
+        const prefixSaveSuccessIcon = document.createElement('span');
+        prefixSaveSuccessIcon.classList.add('svg-icon', 'lucide-check', SuccessIconCSS);
+        prefixSaveIndicator.appendChild(prefixSaveSuccessIcon);
+
+        // 记录前缀自动保存定时器
+        let prefixAutoSaveTimer: number | null = null;
+        
+        // 前缀自动保存方法
+        this.autoSaveDailyFilePrefix = async (value: string) => {
+            // 清除之前的定时器
+            if (prefixAutoSaveTimer !== null) {
+                window.clearTimeout(prefixAutoSaveTimer);
+            }
+            
+            // 设置新的定时器，延迟800ms保存（在用户停止输入后）
+            prefixAutoSaveTimer = window.setTimeout(async () => {
+                // 实际保存设置
+                await this.settingsManager.updateSettings({ dailyFilePrefix: value });
+                this.dirtySettings = false;
+                
+                // 显示保存成功的视觉反馈
+                prefixSaveIndicator.classList.add('save-indicator-visible');
+                prefixSaveIndicator.classList.remove('save-indicator-hidden');
+                window.setTimeout(() => {
+                    prefixSaveIndicator.classList.remove('save-indicator-visible');
+                    prefixSaveIndicator.classList.add('save-indicator-hidden');
+                }, 1500);
+                
+            }, 800);
+        };
+        
+        // 初始化日度文件前缀设置的可见性
+        this.updateDailyFilePrefixVisibility(settings.fileGenerationMode);
         
         // 语言设置
         // TODO: 应该使用Obsidian API的app.i18n.locale获取系统语言设置
@@ -398,9 +540,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         resetBtn.buttonEl.addClass('daily-task-button-common');
         resetBtn.buttonEl.addClass('daily-task-button-lg');
         
-        // 添加重置图标
+        // 添加重置图标 - 使用撤销图标更直观
         const resetIcon = document.createElement('span');
-        resetIcon.classList.add('svg-icon', 'lucide-refresh-cw');
+        resetIcon.classList.add('svg-icon', 'lucide-undo2');
         resetBtn.buttonEl.prepend(resetIcon);
         
         // 添加重置事件
@@ -447,9 +589,9 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         resetDefaultBtn.buttonEl.addClass('daily-task-button-common');
         resetDefaultBtn.buttonEl.addClass('daily-task-button-lg');
         
-        // 添加重置图标
+        // 添加重置图标 - 使用返回主页图标表示恢复到默认状态
         const resetIcon2 = document.createElement('span');
-        resetIcon2.classList.add('svg-icon', 'lucide-refresh-cw');
+        resetIcon2.classList.add('svg-icon', 'lucide-home');
         resetDefaultBtn.buttonEl.prepend(resetIcon2);
         
         // 为全局重置按钮添加事件处理
@@ -504,6 +646,20 @@ export class DailyTaskSettingTab extends PluginSettingTab {
         const calendarIcon = document.createElement('span');
         calendarIcon.classList.add('svg-icon', 'lucide-calendar-plus');
         this.addTaskButton.buttonEl.prepend(calendarIcon);
+    }
+    
+    /**
+     * 更新日度文件前缀设置的可见性
+     * @param mode 文件生成模式
+     */
+    private updateDailyFilePrefixVisibility(mode: FileGenerationMode): void {
+        if (!this.dailyFilePrefixSetting) return;
+        
+        if (mode === FileGenerationMode.DAILY) {
+            this.dailyFilePrefixSetting.style.display = 'block';
+        } else {
+            this.dailyFilePrefixSetting.style.display = 'none';
+        }
     }
     
     /**
@@ -725,4 +881,4 @@ export class SettingsManager {
     hasCustomTemplate(): boolean {
         return !!this.settings.customTemplate;
     }
-} 
+}

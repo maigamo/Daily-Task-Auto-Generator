@@ -3,6 +3,7 @@ import { getCurrentDate, getCurrentMonth, getCurrentYear, getLocalizedMonthName,
 import { getTranslation, TranslationKey } from '../i18n/i18n';
 import { Notice } from 'obsidian';
 import { DEFAULT_SETTINGS } from '../settings/index';
+import { FileGenerationMode } from '../models/settings';
 
 /**
  * 文件操作工具函数
@@ -173,6 +174,113 @@ export function getTaskFilePath(rootDir: string): string {
     const monthFile = `${monthName}.md`;
     
     return normalizePath(`${rootDir}/${yearDir}/${monthFile}`);
+}
+
+/**
+ * 根据文件生成模式和配置生成任务文件路径
+ * @param rootDir 根目录
+ * @param mode 文件生成模式
+ * @param prefix 日度文件前缀（仅日度模式使用）
+ * @returns 任务文件路径
+ */
+export function getTaskFilePathByMode(rootDir: string, mode: FileGenerationMode, prefix: string = ''): string {
+    if (mode === FileGenerationMode.MONTHLY) {
+        return getTaskFilePath(rootDir);
+    } else {
+        return getDailyTaskFilePath(rootDir, prefix);
+    }
+}
+
+/**
+ * 根据当前日期生成日度任务文件路径
+ * @param rootDir 根目录
+ * @param prefix 文件名前缀
+ * @returns 日度任务文件路径，格式为：rootDir/year/monthFolder/prefix+date.md
+ */
+export function getDailyTaskFilePath(rootDir: string, prefix: string = ''): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 1-12
+    const day = now.getDate();
+    
+    const yearDir = year.toString();
+    // 使用数字格式的月份文件夹，保持两位数格式
+    const monthFolder = month.toString().padStart(2, '0');
+    
+    // 生成日期字符串 YYYY-MM-DD
+    const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    
+    // 构建文件名：前缀 + 日期 + .md
+    const fileName = prefix.trim() ? `${prefix.trim()}${dateStr}.md` : `${dateStr}.md`;
+    
+    return normalizePath(`${rootDir}/${yearDir}/${monthFolder}/${fileName}`);
+}
+
+/**
+ * 获取日度任务文件的年份和月份文件夹路径
+ * @param rootDir 根目录
+ * @returns 包含年份路径和月份路径的对象
+ */
+export function getDailyTaskFolderPaths(rootDir: string): { yearPath: string; monthPath: string } {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 1-12
+    
+    const yearDir = year.toString();
+    const monthFolder = month.toString().padStart(2, '0');
+    
+    const yearPath = normalizePath(`${rootDir}/${yearDir}`);
+    const monthPath = normalizePath(`${rootDir}/${yearDir}/${monthFolder}`);
+    
+    return { yearPath, monthPath };
+}
+
+/**
+ * 检查日度任务文件是否已存在
+ * @param vault Obsidian文件系统
+ * @param rootDir 根目录
+ * @param prefix 文件名前缀
+ * @returns 是否已存在
+ */
+export async function dailyTaskFileExists(vault: Vault, rootDir: string, prefix: string = ''): Promise<boolean> {
+    const filePath = getDailyTaskFilePath(rootDir, prefix);
+    const file = vault.getAbstractFileByPath(filePath);
+    return file !== null && file instanceof TFile;
+}
+
+/**
+ * 创建完整的日度任务文件（不追加内容）
+ * @param vault Obsidian文件系统
+ * @param filePath 文件路径
+ * @param content 文件内容
+ * @returns 是否成功创建
+ */
+export async function createDailyTaskFile(vault: Vault, filePath: string, content: string): Promise<boolean> {
+    try {
+        const normalizedPath = normalizePath(filePath);
+        
+        // 确保文件夹结构存在
+        const folderPath = normalizedPath.substring(0, normalizedPath.lastIndexOf('/'));
+        if (folderPath) {
+            const folderExists = await ensureFolderExists(vault, folderPath);
+            if (!folderExists) {
+                return false;
+            }
+        }
+        
+        // 检查文件是否已存在
+        const existingFile = vault.getAbstractFileByPath(normalizedPath);
+        if (existingFile) {
+            return false; // 文件已存在，不重复创建
+        }
+        
+        // 创建新文件
+        await vault.create(normalizedPath, content);
+        
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 /**
