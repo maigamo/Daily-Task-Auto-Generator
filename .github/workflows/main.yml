@@ -12,18 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 拉取代码
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 设置 Node.js 环境
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
+      # 安装依赖
       - name: Install dependencies
         run: npm ci
 
+      # 检查代码是否包含禁止的 console.log/warn/error
       - name: Check for forbidden console logs
         run: |
           if grep -rE 'console\.log|console\.warn|console\.error' src/; then
@@ -31,22 +35,34 @@ jobs:
             exit 1
           fi
 
+      # TypeScript 类型检查（失败不阻断）
       - name: Type Check (non-strict)
         run: |
           echo "Running TypeScript check..."
           npx tsc --noEmit || echo "⚠️ TypeScript check failed, but continuing."
 
+      # 构建插件（使用 package.json 中的 build 脚本）
       - name: Build plugin
         run: npm run build
 
+      # 列出当前目录，方便调试
       - name: List files after build
         run: ls -lah
 
+      # 检查构建产物是否存在
       - name: Check output files
         run: |
-          test -f main.js || (echo "❌ main.js not found after build" && exit 1)
-          test -f manifest.json || (echo "❌ manifest.json not found" && exit 1)
+          echo "当前工作目录：$(pwd)"
+          if [ ! -f main.js ]; then
+            echo "❌ main.js not found after build"
+            exit 1
+          fi
+          if [ ! -f manifest.json ]; then
+            echo "❌ manifest.json not found"
+            exit 1
+          fi
 
+      # 仅在 push 事件时校验提交信息格式
       - name: Enforce commit message format (push only)
         if: github.event_name == 'push'
         run: |
