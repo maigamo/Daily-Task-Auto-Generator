@@ -24,16 +24,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check for forbidden console logs
+        run: |
+          if grep -rE 'console\.log|console\.warn|console\.error' src/; then
+            echo "❌ 代码中包含 console.log/warn/error，禁止提交"
+            exit 1
+          fi
+
       - name: Type Check (non-strict)
         run: |
           echo "Running TypeScript check..."
           npx tsc --noEmit || echo "⚠️ TypeScript check failed, but continuing."
 
       - name: Build plugin
-        run: node esbuild.config.mjs production
+        run: npm run build
+
+      - name: List files after build
+        run: ls -lah
 
       - name: Check output files
         run: |
+          test -f main.js || (echo "❌ main.js not found after build" && exit 1)
           test -f manifest.json || (echo "❌ manifest.json not found" && exit 1)
 
       - name: Enforce commit message format (push only)
