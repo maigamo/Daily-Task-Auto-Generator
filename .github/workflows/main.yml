@@ -61,19 +61,3 @@ jobs:
             echo "❌ manifest.json not found"
             exit 1
           fi
-
-      # 仅在 push 事件时校验提交信息格式，跳过合并提交
-      - name: Enforce commit message format (push only)
-        if: github.event_name == 'push'
-        run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Last commit: $COMMIT_MSG"
-          if echo "$COMMIT_MSG" | grep -q 'Merge branch'; then
-            echo "Merge commit detected, skipping commit message format check."
-            exit 0
-          fi
-          if ! echo "$COMMIT_MSG" | grep -E -q '^(feat|fix|chore|docs|style|refactor|test)(\(.+\))?:\s*.+'
-          then
-            echo "❌ Commit message does not follow conventional format (e.g., 'feat: xxx')"
-            exit 1
-          fi
