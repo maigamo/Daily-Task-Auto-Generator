@@ -44,6 +44,8 @@ Setting interface.
 - 🎨 **Customizable Templates**: Design your own task templates with variables like date, time, progress indicators
 - 📁 **Flexible Organization**: Organize tasks in customizable folder structures
 - 📱 **Mobile Friendly**: Works perfectly on both desktop and mobile Obsidian
+- 🗓️ **New: Monthly/Daily Plan Generation**: Supports generation of both daily tasks and monthly plans for flexible scheduling
+- 👁 **New: Template Preview Feature**: Preview the content of your template before generation to ensure accuracy
 
 ### 📥 Installation
 
@@ -104,7 +106,9 @@ Contributions are welcome! Feel free to submit issues or pull requests on GitHub
 - 🎨 **可自定义模板**: 使用日期、时间、进度指标等变量设计您自己的任务模板
 - 📁 **灵活组织**: 在可自定义的文件夹结构中组织任务
 - 📱 **移动设备友好**: 在桌面和移动Obsidian上完美运行
-
+- 🗓️ **新增：每月 / 每日计划支持**：支持按月、按日生成计划任务，满足不同时间粒度需求
+- 👁 **新增：模板预览功能**：生成前可预览模板内容，确保格式和内容准确
+- 
 ### 📥 安装
 
 1. 打开Obsidian并转到设置
